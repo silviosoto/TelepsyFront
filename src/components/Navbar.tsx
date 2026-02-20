@@ -9,10 +9,9 @@ import { Logo } from "./Logo";
 import { cn } from "../lib/utils";
 
 const navLinks = [
-    { name: "Cómo funciona", href: "#how-it-works" },
-    { name: "Beneficios", href: "#benefits" },
-    { name: "Testimonios", href: "#testimonials" },
-    { name: "FAQ", href: "#faq" },
+    { name: "Especialistas", href: "/psychologists" },
+    { name: "Cómo funciona", href: "/#how-it-works" },
+    { name: "Testimonios", href: "/#testimonials" },
 ];
 
 export const Navbar = () => {
@@ -53,9 +52,14 @@ export const Navbar = () => {
                                 </Link>
                             ))}
                         </div>
-                        <Link href="/test">
-                            <Button size="sm">Iniciar Test</Button>
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <Link href="/login" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+                                Iniciar Sesión
+                            </Link>
+                            <Link href="/register">
+                                <Button size="sm">Empezar Ahora</Button>
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -88,8 +92,12 @@ export const Navbar = () => {
                                     {link.name}
                                 </Link>
                             ))}
-                            <Link href="/test" onClick={() => setIsMobileMenuOpen(false)}>
-                                <Button className="w-full">Iniciar Test</Button>
+                            <div className="h-px bg-glass-border my-2" />
+                            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-foreground/80 hover:text-primary py-2">
+                                Iniciar Sesión
+                            </Link>
+                            <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Button className="w-full">Empezar Ahora</Button>
                             </Link>
                         </div>
                     </motion.div>

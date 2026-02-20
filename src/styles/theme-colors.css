@@ -5,31 +5,31 @@
 */
 
 :root {
-  /* Primary: Vital Teal - Active healing and professional energy. */
-  --color-primary: #0D9488;
-  --color-primary-hsl: 175, 84%, 32%;
+  /* Primary: Indigo - Vibrant and trustworthy. */
+  --color-primary: #4F46E5;
+  --color-primary-hsl: 243, 75%, 59%;
 
-  /* Secondary: Soft Sky - Professional technology and calm backgrounds. */
+  /* Secondary: Sky Blue - Soft accents. */
   --color-secondary: #0EA5E9;
   --color-secondary-hsl: 199, 89%, 48%;
 
-  /* Accent: Vibrant Coral - Human warmth and critical Call-to-Actions. */
-  --color-accent: #F43F5E;
-  --color-accent-hsl: 351, 91%, 60%;
+  /* Accent: Rose - Call to action. */
+  --color-accent: #E11D48;
+  --color-accent-hsl: 343, 81%, 50%;
 
-  /* Background: Pure White - Maximum cleanliness and contrast. */
-  --color-background: #FFFFFF;
-  --color-background-hsl: 0, 0%, 100%;
+  /* Background: Pure White / Light Gray - Clean and modern. */
+  --color-background: #F8FAFC;
+  --color-background-hsl: 210, 40%, 98%;
 
-  /* Text: Deep Slate - High contrast and readability. */
+  /* Foreground/Text: Slate - Readable and professional. */
   --color-foreground: #0F172A;
   --color-foreground-hsl: 222, 47%, 11%;
 
-  /* Functional: Vibrant Success & Error */
+  /* Functional */
   --color-success: #10B981;
   --color-error: #EF4444;
 
-  /* Glassmorphism Refined */
-  --background-glass: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(13, 148, 136, 0.2);
+  /* Glassmorphism */
+  --background-glass: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(79, 70, 229, 0.1);
 }
