@@ -63,7 +63,11 @@ export default function ServicesPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const profile = await psychologistService.getMe();
+            const storedUser = localStorage.getItem("user");
+            if (!storedUser) return;
+
+            const user = JSON.parse(storedUser);
+            const profile = await psychologistService.getPsychologistByUserId(user.id);
             if (!profile) return;
 
             setPsychologistId(profile.id);

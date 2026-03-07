@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { appointmentService } from "@/services/appointment.service";
+import { psychologistService } from "@/services/psychologist.service";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Clock, User, FileText } from "lucide-react";
@@ -26,6 +27,7 @@ export default function AppointmentsPage() {
     const router = useRouter();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [psychologistId, setPsychologistId] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -35,13 +37,31 @@ export default function AppointmentsPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
-    const PSYCHOLOGIST_ID = 1;
+    const fetchPsychologistId = async () => {
+        try {
+            const storedUser = localStorage.getItem("user");
+            if (!storedUser) return null;
 
-    const fetchAppointments = async () => {
+            const user = JSON.parse(storedUser);
+            const profile = await psychologistService.getPsychologistByUserId(user.id);
+            if (profile) {
+                setPsychologistId(profile.id);
+                return profile.id;
+            }
+        } catch (error) {
+            console.error("Error resolving psychologist ID:", error);
+        }
+        return null;
+    };
+
+    const fetchAppointments = async (overrideId?: number) => {
         setLoading(true);
         try {
+            const id = overrideId || psychologistId;
+            if (!id) return;
+
             const filter = {
-                psychologistId: PSYCHOLOGIST_ID,
+                psychologistId: id,
                 patientName: patientName || undefined,
                 startDate: startDate || undefined,
                 endDate: endDate || undefined,
@@ -85,7 +105,13 @@ export default function AppointmentsPage() {
     };
 
     useEffect(() => {
-        fetchAppointments();
+        const init = async () => {
+            const id = await fetchPsychologistId();
+            if (id) {
+                fetchAppointments(id);
+            }
+        };
+        init();
     }, [pageNumber]); // Fetch when page changes
 
     const handleSearch = (e: React.FormEvent) => {
@@ -103,7 +129,10 @@ export default function AppointmentsPage() {
         // the easiest way is to push the fetch to the end of the event loop, 
         // or just rely on an effect if we added them to the dependency array.
         // For simplicity, we just trigger fetch with empty values manually right now:
+        if (!psychologistId) return;
+
         const filter = {
+            psychologistId: psychologistId,
             patientName: undefined,
             startDate: undefined,
             endDate: undefined,

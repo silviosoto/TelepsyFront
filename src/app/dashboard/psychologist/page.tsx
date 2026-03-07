@@ -33,20 +33,24 @@ export default function PsychologistDashboard() {
         const loadDashboardData = async () => {
             setLoading(true);
             try {
-                // Use getMe to resolve the current session psychologist
-                const profileData = await psychologistService.getMe();
+                // Resolve the current session psychologist from localStorage
+                const storedUser = localStorage.getItem("user");
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    const profileData = await psychologistService.getPsychologistByUserId(user.id);
 
-                if (profileData) {
-                    setProfile(profileData);
-                    const scheduleData = await psychologistService.getSchedule(profileData.id);
+                    if (profileData) {
+                        setProfile(profileData);
+                        const scheduleData = await psychologistService.getSchedule(profileData.id);
 
-                    if (scheduleData && Array.isArray(scheduleData)) {
-                        const mapped = scheduleData.map((s: any) => ({
-                            dayOfWeek: s.dayOfWeek ?? s.DayOfWeek,
-                            startTime: typeof (s.startTime ?? s.StartTime) === 'string' ? (s.startTime ?? s.StartTime).substring(0, 5) : "08:00",
-                            endTime: typeof (s.endTime ?? s.EndTime) === 'string' ? (s.endTime ?? s.EndTime).substring(0, 5) : "17:00"
-                        }));
-                        setSchedules(mapped);
+                        if (scheduleData && Array.isArray(scheduleData)) {
+                            const mapped = scheduleData.map((s: any) => ({
+                                dayOfWeek: s.dayOfWeek ?? s.DayOfWeek,
+                                startTime: typeof (s.startTime ?? s.StartTime) === 'string' ? (s.startTime ?? s.StartTime).substring(0, 5) : "08:00",
+                                endTime: typeof (s.endTime ?? s.EndTime) === 'string' ? (s.endTime ?? s.EndTime).substring(0, 5) : "17:00"
+                            }));
+                            setSchedules(mapped);
+                        }
                     }
                 }
             } catch (error) {

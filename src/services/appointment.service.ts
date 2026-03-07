@@ -35,16 +35,43 @@ export const appointmentService = {
     },
 
     async getPsychologistAppointments(filter: any) {
-        const queryParams = new URLSearchParams();
-        if (filter.psychologistId) queryParams.append('psychologistId', filter.psychologistId.toString());
-        if (filter.startDate) queryParams.append('startDate', filter.startDate);
-        if (filter.endDate) queryParams.append('endDate', filter.endDate);
-        if (filter.patientName) queryParams.append('patientName', filter.patientName);
-        if (filter.status !== undefined) queryParams.append('status', filter.status.toString());
-        queryParams.append('pageNumber', filter.pageNumber?.toString() || '1');
-        queryParams.append('pageSize', filter.pageSize?.toString() || '10');
+        // Fetch all appointments for the psychologist from the existing backend endpoint
+        const response = await fetchClient(`/appointments/psychologist/${filter.psychologistId}`);
+        const allAppointments: any[] = response || [];
 
-        return fetchClient(`/appointments/search?${queryParams.toString()}`);
+        // Filter locally
+        let filtered = allAppointments;
+        if (filter.patientName) {
+            const searchLower = filter.patientName.toLowerCase();
+            filtered = filtered.filter(a =>
+                a.patient?.person?.firstName?.toLowerCase().includes(searchLower) ||
+                a.patient?.person?.lastName?.toLowerCase().includes(searchLower)
+            );
+        }
+        if (filter.startDate) {
+            const startStr = new Date(filter.startDate).toISOString().split('T')[0];
+            filtered = filtered.filter(a => new Date(a.scheduledTime).toISOString().split('T')[0] >= startStr);
+        }
+        if (filter.endDate) {
+            const endStr = new Date(filter.endDate).toISOString().split('T')[0];
+            filtered = filtered.filter(a => new Date(a.scheduledTime).toISOString().split('T')[0] <= endStr);
+        }
+        if (filter.status !== undefined) {
+            filtered = filtered.filter(a => a.status === filter.status);
+        }
+
+        // Paginate
+        const page = filter.pageNumber || 1;
+        const size = filter.pageSize || 10;
+        const startIndex = (page - 1) * size;
+        const items = filtered.slice(startIndex, startIndex + size);
+
+        return {
+            items,
+            totalCount: filtered.length,
+            pageNumber: page,
+            pageSize: size
+        };
     },
 
     async markAsCompleted(id: number) {

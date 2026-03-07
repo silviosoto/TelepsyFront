@@ -35,13 +35,16 @@ export default function LoginPage() {
             }
 
             localStorage.setItem('token', data.token);
-            // Decode token or check response for role to redirect correctly
-            // For MVP, assuming Patient if not specified, or checks a claim
-            // Ideally the backend response includes the role.
-            // If not, we can default to /dashboard/patient and let the dashboard redirect if unauthorized.
 
-            // Simple check based on email for demo if backend doesn't return role easily without decoding
-            if (email.includes("psych")) {
+            // Save user info for ID resolution in dashboards
+            const user = {
+                id: data.userId,
+                email: data.email,
+                role: data.role
+            };
+            localStorage.setItem('user', JSON.stringify(user));
+
+            if (data.role === "Psychologist" || email.includes("psych")) {
                 router.push("/dashboard/psychologist");
             } else {
                 router.push("/dashboard/patient");

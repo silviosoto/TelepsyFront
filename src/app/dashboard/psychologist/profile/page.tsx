@@ -26,11 +26,15 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         setIsLoading(true);
         try {
-            const data = await psychologistService.getMe();
-            if (data) {
-                setPsychologist(data);
-                setPsychologistId(data.id);
-                reset(data); // Initialize form with data
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                const data = await psychologistService.getPsychologistByUserId(user.id);
+                if (data) {
+                    setPsychologist(data);
+                    setPsychologistId(data.id);
+                    reset(data); // Initialize form with data
+                }
             }
         } catch (error) {
             console.error("Error fetching profile", error);

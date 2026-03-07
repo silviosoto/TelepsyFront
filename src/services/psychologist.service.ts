@@ -44,12 +44,6 @@ export const psychologistService = {
         return this.mapToUI(data);
     },
 
-    async getMe(): Promise<PsychologistProfileUI | null> {
-        const data = await fetchClient('/psychologist/me');
-        if (!data) return null;
-        return this.mapProfileToUI(data);
-    },
-
     // Refactored mapping to avoid duplication
     mapToUI(data: any[]): PsychologistUI[] {
         return data.map((psy: any) => ({

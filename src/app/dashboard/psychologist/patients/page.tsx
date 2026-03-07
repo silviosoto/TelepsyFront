@@ -19,13 +19,20 @@ export default function MyPatientsPage() {
             try {
                 // In this dashboard we assume the psychologist is logged in.
                 // We'll try to find the ID or use ID 1 for testing.
-                let psychologistId = 1;
+                let psychologistId = 0;
 
                 const storedUser = localStorage.getItem("user");
                 if (storedUser) {
                     const user = JSON.parse(storedUser);
                     const psyProfile = await psychologistService.getPsychologistByUserId(user.id);
-                    if (psyProfile) psychologistId = psyProfile.id;
+                    if (psyProfile) {
+                        psychologistId = psyProfile.id;
+                    }
+                }
+
+                if (psychologistId === 0) {
+                    setIsLoading(false);
+                    return;
                 }
 
                 const data = await psychologistService.getPatients(psychologistId);
