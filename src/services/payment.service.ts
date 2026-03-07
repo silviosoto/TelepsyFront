@@ -7,5 +7,9 @@ export const paymentService = {
 
     async getPaymentDetails(id: string) {
         return fetchClient(`/payments/${id}`);
+    },
+
+    async getCheckoutData(invoiceId: number) {
+        return fetchClient(`/payment/checkout/${invoiceId}`);
     }
 };

@@ -10,6 +10,8 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/sections/Footer";
 import { Button } from "@/components/Button";
 import { psychologistService, PsychologistProfileUI } from "@/services/psychologist.service";
+import { appointmentService } from "@/services/appointment.service";
+import { toast } from "sonner";
 
 // Schedule generation logic will be inside the component
 interface ScheduleItem {
@@ -33,6 +35,7 @@ export default function PsychologistProfilePage() {
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [allSchedules, setAllSchedules] = useState<ScheduleItem[]>([]);
     const [dynamicTimeSlots, setDynamicTimeSlots] = useState<string[]>([]);
+    const [isBooking, setIsBooking] = useState(false);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -103,6 +106,45 @@ export default function PsychologistProfilePage() {
         setSelectedTime(null); // Reset selection when date changes
     }, [selectedDate, allSchedules]);
 
+    const handleBooking = async () => {
+        if (!selectedService || !selectedTime) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            toast.error("Debes iniciar sesión para reservar una cita");
+            router.push("/auth/login?redirect=" + encodeURIComponent(window.location.pathname));
+            return;
+        }
+
+        setIsBooking(true);
+        try {
+            // Combine selectedDate and selectedTime
+            const [hours, minutes] = selectedTime.split(':');
+            const scheduledTime = new Date(selectedDate);
+            scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            const result = await appointmentService.initiateBooking({
+                psychologistId: id,
+                therapyId: selectedService.therapyId,
+                scheduledTime: scheduledTime.toISOString()
+            });
+
+            if (result && result.appointmentId) {
+                toast.success("¡Reserva preparada con éxito! Redirigiendo al pago seguro...");
+
+                // Small delay to let the user see the success message
+                setTimeout(() => {
+                    router.push(`/appointments/checkout/${result.appointmentId}`);
+                }, 1500);
+            }
+        } catch (error: any) {
+            console.error("Booking error:", error);
+            toast.error(error.message || "Error al iniciar la reserva");
+        } finally {
+            setIsBooking(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-background flex flex-col">
@@ -170,10 +212,9 @@ export default function PsychologistProfilePage() {
                                     </span>
                                 </div>
 
-                                <h1 className="text-3xl font-bold text-foreground mb-1">
+                                <h1 className="text-3xl font-bold text-foreground mb-3">
                                     {psychologist.firstName} {psychologist.lastName}
                                 </h1>
-                                <p className="text-lg text-primary font-medium mb-3">{psychologist.specialization}</p>
 
                                 <div className="flex flex-wrap gap-4 text-sm text-foreground/60 mb-4">
                                     <div className="flex items-center gap-1">
@@ -229,18 +270,18 @@ export default function PsychologistProfilePage() {
                                 <div>
                                     <h3 className="font-bold text-sm text-foreground/50 uppercase tracking-wider mb-3">Especialidades</h3>
                                     <ul className="space-y-2">
-                                        <li className="flex items-center gap-2 text-foreground/80">
-                                            <CheckCircle className="w-4 h-4 text-primary" />
-                                            Ansiedad y Depresión
-                                        </li>
-                                        <li className="flex items-center gap-2 text-foreground/80">
-                                            <CheckCircle className="w-4 h-4 text-primary" />
-                                            Terapia Cognitivo Conductual
-                                        </li>
-                                        <li className="flex items-center gap-2 text-foreground/80">
-                                            <CheckCircle className="w-4 h-4 text-primary" />
-                                            Gestión del Estrés
-                                        </li>
+                                        {psychologist.tags.filter(tag => tag !== psychologist.city && tag !== psychologist.specialization).map((tag, index) => (
+                                            <li key={index} className="flex items-center gap-2 text-foreground/80">
+                                                <CheckCircle className="w-4 h-4 text-primary" />
+                                                {tag}
+                                            </li>
+                                        ))}
+                                        {psychologist.tags.filter(t => t !== psychologist.city && t !== psychologist.specialization).length === 0 && (
+                                            <li className="flex items-center gap-2 text-foreground/80">
+                                                <CheckCircle className="w-4 h-4 text-primary" />
+                                                {psychologist.specialization}
+                                            </li>
+                                        )}
                                     </ul>
                                 </div>
                             </div>
@@ -416,10 +457,11 @@ export default function PsychologistProfilePage() {
 
                                     <Button
                                         className="w-full h-12 text-lg font-bold rounded-xl mt-4"
-                                        disabled={!selectedTime || !selectedService}
-                                        onClick={() => alert(`Reserva iniciada para ${selectedService?.therapyName} el ${selectedDate.toLocaleDateString()} a las ${selectedTime}`)}
+                                        disabled={!selectedTime || !selectedService || isBooking}
+                                        onClick={handleBooking}
+                                        isLoading={isBooking}
                                     >
-                                        Reservar Cita
+                                        {isBooking ? "Procesando..." : "Reservar Cita"}
                                     </Button>
 
                                     <p className="text-xs text-center text-foreground/40 mt-4">
@@ -427,21 +469,13 @@ export default function PsychologistProfilePage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            <div className="bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl p-4 border border-indigo-500/10 flex gap-3">
-                                <Award className="w-8 h-8 text-primary flex-shrink-0" />
-                                <div>
-                                    <h4 className="font-bold text-sm text-foreground">Garantía de Satisfacción</h4>
-                                    <p className="text-xs text-foreground/60 mt-1">Si no estás satisfecho con tu primera sesión, te devolvemos el dinero.</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             <Footer />
-        </main>
+        </main >
     );
 }
 

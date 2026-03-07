@@ -44,7 +44,7 @@ export default function ServicesPage() {
     const [newServiceRate, setNewServiceRate] = useState<string>("");
     const [isAdding, setIsAdding] = useState(false);
 
-    const PSYCHOLOGIST_ID = 1; // Mock ID, should come from auth
+    const [psychologistId, setPsychologistId] = useState<number | null>(null);
     const searchRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -63,9 +63,14 @@ export default function ServicesPage() {
     const loadData = async () => {
         setLoading(true);
         try {
+            const profile = await psychologistService.getMe();
+            if (!profile) return;
+
+            setPsychologistId(profile.id);
+
             const [therapies, currentServices] = await Promise.all([
                 psychologistService.getAvailableTherapies(),
-                psychologistService.getServices(PSYCHOLOGIST_ID)
+                psychologistService.getServices(profile.id)
             ]);
 
             setAllTherapies(therapies as Therapy[]);
@@ -94,11 +99,12 @@ export default function ServicesPage() {
     };
 
     const handleSave = async (service: ServiceState) => {
+        if (!psychologistId) return;
         setMyServices(prev => prev.map(s => s.therapyId === service.therapyId ? { ...s, isSaving: true } : s));
         setMessage(null);
 
         try {
-            await psychologistService.updateService(PSYCHOLOGIST_ID, {
+            await psychologistService.updateService(psychologistId, {
                 therapyId: service.therapyId,
                 rate: service.rate,
                 isActive: service.isActive
@@ -115,7 +121,7 @@ export default function ServicesPage() {
     };
 
     const handleAddService = async () => {
-        if (!selectedTherapy || !newServiceRate) return;
+        if (!selectedTherapy || !newServiceRate || !psychologistId) return;
 
         const rate = parseFloat(newServiceRate);
         if (isNaN(rate) || rate <= 0) {
@@ -127,7 +133,7 @@ export default function ServicesPage() {
         setMessage(null);
 
         try {
-            await psychologistService.updateService(PSYCHOLOGIST_ID, {
+            await psychologistService.updateService(psychologistId, {
                 therapyId: selectedTherapy.id,
                 rate: rate,
                 isActive: true

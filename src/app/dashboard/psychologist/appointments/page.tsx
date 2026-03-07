@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { appointmentService } from "@/services/appointment.service";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
@@ -8,6 +9,7 @@ import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Clock, User, FileT
 
 interface Appointment {
     id: number;
+    patientId: number;
     patient: {
         person: {
             firstName: string;
@@ -21,6 +23,7 @@ interface Appointment {
 }
 
 export default function AppointmentsPage() {
+    const router = useRouter();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [pageNumber, setPageNumber] = useState(1);
@@ -32,7 +35,7 @@ export default function AppointmentsPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
-    const PSYCHOLOGIST_ID = 1; // Mock ID
+    const PSYCHOLOGIST_ID = 1;
 
     const fetchAppointments = async () => {
         setLoading(true);
@@ -63,6 +66,24 @@ export default function AppointmentsPage() {
         }
     };
 
+    const handleMarkAsCompleted = async (id: number) => {
+        try {
+            await appointmentService.markAsCompleted(id);
+            fetchAppointments();
+        } catch (error) {
+            console.error("Error marking appointment as completed", error);
+        }
+    };
+
+    const handleMarkAsNoShow = async (id: number) => {
+        try {
+            await appointmentService.markAsNoShow(id);
+            fetchAppointments();
+        } catch (error) {
+            console.error("Error marking appointment as no show", error);
+        }
+    };
+
     useEffect(() => {
         fetchAppointments();
     }, [pageNumber]); // Fetch when page changes
@@ -71,6 +92,39 @@ export default function AppointmentsPage() {
         e.preventDefault();
         setPageNumber(1); // Reset to first page
         fetchAppointments();
+    };
+
+    const handleClearFilters = () => {
+        setPatientName("");
+        setStartDate("");
+        setEndDate("");
+        setPageNumber(1);
+        // We need to wait for state updates to apply before fetching, 
+        // the easiest way is to push the fetch to the end of the event loop, 
+        // or just rely on an effect if we added them to the dependency array.
+        // For simplicity, we just trigger fetch with empty values manually right now:
+        const filter = {
+            patientName: undefined,
+            startDate: undefined,
+            endDate: undefined,
+            pageNumber: 1,
+            pageSize: 10
+        };
+
+        setLoading(true);
+        appointmentService.getPsychologistAppointments(filter).then((result: any) => {
+            if (result && result.items) {
+                setAppointments(result.items);
+                setTotalCount(result.totalCount);
+                setTotalPages(Math.ceil(result.totalCount / result.pageSize));
+            } else {
+                setAppointments([]);
+            }
+            setLoading(false);
+        }).catch(err => {
+            console.error(err);
+            setLoading(false);
+        });
     };
 
     const getStatusBadge = (status: number) => {
@@ -94,6 +148,19 @@ export default function AppointmentsPage() {
         });
     };
 
+    const handleJoinCall = async (id: number) => {
+        try {
+            const response: any = await appointmentService.joinAppointment(id);
+            if (response && response.link) {
+                window.open(response.link, '_blank');
+            } else {
+                console.error("Link de reunión no encontrado");
+            }
+        } catch (error) {
+            console.error("Error al intentar unirse a la llamada:", error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -107,8 +174,8 @@ export default function AppointmentsPage() {
             </div>
 
             {/* Filters Bar */}
-            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-glass-border">
-                <div className="relative">
+            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-glass-border">
+                <div className="relative md:col-span-2">
                     <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
                     <input
                         type="text"
@@ -134,10 +201,15 @@ export default function AppointmentsPage() {
                         className="w-full px-4 py-3 rounded-xl border border-input bg-background/50 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     />
                 </div>
-                <Button type="submit" variant="primary" className="w-full h-[46px] rounded-xl">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtrar
-                </Button>
+                <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={handleClearFilters} className="w-1/3 h-[46px] rounded-xl flex items-center justify-center p-0" title="Limpiar filtros">
+                        <span className="text-gray-500 text-lg">×</span>
+                    </Button>
+                    <Button type="submit" variant="primary" className="w-2/3 h-[46px] rounded-xl">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Filtrar
+                    </Button>
+                </div>
             </form>
 
             {/* Appointments List */}
@@ -178,11 +250,51 @@ export default function AppointmentsPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4 w-full md:w-auto mt-2 md:mt-0 justify-between md:justify-end">
+                                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 w-full md:w-auto mt-4 md:mt-0 justify-between md:justify-end">
                                     {getStatusBadge(appointment.status)}
-                                    <Button variant="ghost" className="text-sm">
+                                    {appointment.status === 1 && (
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                            <Button
+                                                variant="primary"
+                                                onClick={() => handleJoinCall(appointment.id)}
+                                                className="text-xs h-8 px-4 font-semibold"
+                                            >
+                                                Unirse a Llamada
+                                            </Button>
+
+                                            {new Date(appointment.scheduledTime) < new Date() && (
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => handleMarkAsCompleted(appointment.id)}
+                                                        className="text-xs h-8 px-2 border-green-500 text-green-600 hover:bg-green-50"
+                                                        title="Marcar como Completada"
+                                                    >
+                                                        Completada
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => handleMarkAsNoShow(appointment.id)}
+                                                        className="text-xs h-8 px-2 border-red-500 text-red-600 hover:bg-red-50"
+                                                        title="Marcar como No Asistió"
+                                                    >
+                                                        No Asistió
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    <Button variant="ghost" className="text-sm whitespace-nowrap">
                                         Detalles
                                         <ChevronRight className="h-4 w-4 ml-1" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="text-xs h-8 gap-2 border-primary/20 text-primary hover:bg-primary/5"
+                                        onClick={() => router.push(`/dashboard/psychologist/patients/${appointment.patientId}/history`)}
+                                    >
+                                        <FileText className="h-3.5 w-3.5" />
+                                        Historia Clínica
                                     </Button>
                                 </div>
                             </div>

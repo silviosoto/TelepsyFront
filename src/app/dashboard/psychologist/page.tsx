@@ -29,26 +29,25 @@ export default function PsychologistDashboard() {
     const [loading, setLoading] = useState(true);
     const [selectedViewDate, setSelectedViewDate] = useState<number>(new Date().getDay());
 
-    const PSYCHOLOGIST_ID = 1; // Demo ID
-
     useEffect(() => {
         const loadDashboardData = async () => {
             setLoading(true);
             try {
-                const [profileData, scheduleData] = await Promise.all([
-                    psychologistService.getPsychologistById(PSYCHOLOGIST_ID),
-                    psychologistService.getSchedule(PSYCHOLOGIST_ID)
-                ]);
+                // Use getMe to resolve the current session psychologist
+                const profileData = await psychologistService.getMe();
 
-                setProfile(profileData);
+                if (profileData) {
+                    setProfile(profileData);
+                    const scheduleData = await psychologistService.getSchedule(profileData.id);
 
-                if (scheduleData && Array.isArray(scheduleData)) {
-                    const mapped = scheduleData.map((s: any) => ({
-                        dayOfWeek: s.dayOfWeek ?? s.DayOfWeek,
-                        startTime: typeof (s.startTime ?? s.StartTime) === 'string' ? (s.startTime ?? s.StartTime).substring(0, 5) : "08:00",
-                        endTime: typeof (s.endTime ?? s.EndTime) === 'string' ? (s.endTime ?? s.EndTime).substring(0, 5) : "17:00"
-                    }));
-                    setSchedules(mapped);
+                    if (scheduleData && Array.isArray(scheduleData)) {
+                        const mapped = scheduleData.map((s: any) => ({
+                            dayOfWeek: s.dayOfWeek ?? s.DayOfWeek,
+                            startTime: typeof (s.startTime ?? s.StartTime) === 'string' ? (s.startTime ?? s.StartTime).substring(0, 5) : "08:00",
+                            endTime: typeof (s.endTime ?? s.EndTime) === 'string' ? (s.endTime ?? s.EndTime).substring(0, 5) : "17:00"
+                        }));
+                        setSchedules(mapped);
+                    }
                 }
             } catch (error) {
                 console.error("Error loading dashboard data:", error);
@@ -150,8 +149,8 @@ export default function PsychologistDashboard() {
                                             key={day}
                                             onClick={() => setSelectedViewDate(i)}
                                             className={`flex flex-col items-center justify-center min-w-[4.5rem] p-3 rounded-2xl border transition-all relative ${isSelected
-                                                    ? "bg-primary text-white border-primary shadow-lg shadow-primary/25 scale-105"
-                                                    : "bg-secondary/5 border-transparent text-foreground/60 hover:bg-secondary/10"
+                                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/25 scale-105"
+                                                : "bg-secondary/5 border-transparent text-foreground/60 hover:bg-secondary/10"
                                                 }`}
                                         >
                                             <span className="text-[10px] uppercase font-bold opacity-80">{day.substring(0, 3)}</span>

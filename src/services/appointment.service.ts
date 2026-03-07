@@ -2,8 +2,8 @@ import { fetchClient } from "@/lib/api-client";
 
 export const appointmentService = {
     async getAppointments() {
-        // Can filter by status: scheduled, completed, cancelled
-        return fetchClient('/appointments');
+        // Fetch only appointments for the currently logged-in patient
+        return fetchClient('/appointments/my-appointments');
     },
 
     async getAppointmentById(id: number) {
@@ -15,6 +15,17 @@ export const appointmentService = {
             method: 'POST',
             body: JSON.stringify(appointmentData)
         });
+    },
+
+    async initiateBooking(bookingData: { psychologistId: number; therapyId: number; scheduledTime: string }) {
+        return fetchClient('/appointments/initiate', {
+            method: 'POST',
+            body: JSON.stringify(bookingData)
+        });
+    },
+
+    async getCheckoutSummary(appointmentId: number) {
+        return fetchClient(`/appointments/checkout-summary/${appointmentId}`);
     },
 
     async cancelAppointment(id: number) {
@@ -34,5 +45,21 @@ export const appointmentService = {
         queryParams.append('pageSize', filter.pageSize?.toString() || '10');
 
         return fetchClient(`/appointments/search?${queryParams.toString()}`);
+    },
+
+    async markAsCompleted(id: number) {
+        return fetchClient(`/appointments/${id}/complete`, {
+            method: 'PUT'
+        });
+    },
+
+    async markAsNoShow(id: number) {
+        return fetchClient(`/appointments/${id}/noshow`, {
+            method: 'PUT'
+        });
+    },
+
+    async joinAppointment(id: number) {
+        return fetchClient(`/appointments/${id}/join`);
     }
 };

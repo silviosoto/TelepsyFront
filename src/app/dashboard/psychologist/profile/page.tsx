@@ -6,6 +6,7 @@ import { psychologistService, PsychologistProfileUI } from "@/services/psycholog
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Loader2, Save, X } from "lucide-react";
+import { ProfileImageUpload } from "@/components/ProfileImageUpload";
 
 export default function ProfilePage() {
     const [psychologist, setPsychologist] = useState<PsychologistProfileUI | null>(null);
@@ -14,8 +15,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
-    // Hardcoded ID for demo purposes as per current scope
-    const PSYCHOLOGIST_ID = 1;
+    const [psychologistId, setPsychologistId] = useState<number | null>(null);
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm<PsychologistProfileUI>();
 
@@ -26,9 +26,10 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         setIsLoading(true);
         try {
-            const data = await psychologistService.getPsychologistById(PSYCHOLOGIST_ID);
+            const data = await psychologistService.getMe();
             if (data) {
                 setPsychologist(data);
+                setPsychologistId(data.id);
                 reset(data); // Initialize form with data
             }
         } catch (error) {
@@ -54,12 +55,13 @@ export default function ProfilePage() {
                 specialization: data.specialization,
                 university: data.university,
                 experienceYears: Number(data.experience),
-                sessionRate: Number(data.price),
+                sessionRate: psychologist?.price || 0,
                 bio: data.bio,
                 hobbies: data.hobbies
             };
 
-            await psychologistService.updateProfile(PSYCHOLOGIST_ID, dto);
+            if (!psychologistId) return;
+            await psychologistService.updateProfile(psychologistId, dto);
             setPsychologist({ ...psychologist, ...data } as PsychologistProfileUI);
             setIsEditing(false);
             setMessage({ text: "Perfil actualizado correctamente", type: 'success' });
@@ -68,6 +70,25 @@ export default function ProfilePage() {
             setMessage({ text: "Error al actualizar el perfil", type: 'error' });
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleImageUpdate = async (base64Image: string) => {
+        if (psychologist) {
+            setPsychologist({ ...psychologist, profilePicture: base64Image });
+            try {
+                // Convert Base64 (DataURL) to Blob/File to send to the backend
+                const response = await fetch(base64Image);
+                const blob = await response.blob();
+                const file = new File([blob], "profile-picture.jpg", { type: "image/jpeg" });
+
+                if (!psychologistId) return;
+                await psychologistService.updateProfilePicture(psychologistId, file);
+                setMessage({ text: "Foto de perfil actualizada correctamente.", type: 'success' });
+            } catch (error) {
+                console.error("Error updating profile picture", error);
+                setMessage({ text: "Error al actualizar la foto de perfil.", type: 'error' });
+            }
         }
     };
 
@@ -104,38 +125,65 @@ export default function ProfilePage() {
             )}
 
             {isEditing ? (
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-sm border border-glass-border">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Personal Info */}
-                        <div className="space-y-5">
-                            <h3 className="text-lg font-semibold text-primary border-b border-glass-border pb-2">Información Personal</h3>
-                            <Input label="Nombre" {...register("firstName", { required: "El nombre es requerido" })} error={errors.firstName?.message} />
-                            <Input label="Apellidos" {...register("lastName", { required: "Los apellidos son requeridos" })} error={errors.lastName?.message} />
-                            <Input label="Ciudad" {...register("city", { required: "La ciudad es requerida" })} error={errors.city?.message} />
-                            <Input label="Teléfono" {...register("phone", { required: "El teléfono es requerido" })} error={errors.phone?.message} />
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-sm border border-glass-border">
+                    {/* Header Row: Profile Picture & Basic Names */}
+                    <div className="flex flex-col md:flex-row gap-8 items-start pb-8 border-b border-glass-border">
+                        <div className="flex-shrink-0 flex flex-col items-center gap-3 w-full md:w-auto">
+                            <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Foto de Perfil</span>
+                            <ProfileImageUpload
+                                initialImage={psychologist.profilePicture}
+                                initials={`${psychologist.firstName[0]}${psychologist.lastName[0]}`}
+                                onImageUpdate={handleImageUpdate}
+                            />
                         </div>
 
-                        {/* Professional Info */}
-                        <div className="space-y-5">
-                            <h3 className="text-lg font-semibold text-primary border-b border-glass-border pb-2">Información Profesional</h3>
-                            <Input label="Especialidad" {...register("specialization")} />
-                            <Input label="Universidad" {...register("university")} />
-                            <Input label="Años de Experiencia" type="number" {...register("experience")} />
-                            <Input label="Tarifa por Sesión" type="number" {...register("price")} />
+                        <div className="flex-grow w-full space-y-4">
+                            <h3 className="text-lg font-semibold text-primary mb-4">Información Personal</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input label="Nombre" {...register("firstName", { required: "El nombre es requerido" })} error={errors.firstName?.message} />
+                                <Input label="Apellidos" {...register("lastName", { required: "Los apellidos son requeridos" })} error={errors.lastName?.message} />
+                                <Input label="Ciudad de residencia" {...register("city", { required: "La ciudad es requerida" })} error={errors.city?.message} />
+                                <Input label="Número de Teléfono" {...register("phone", { required: "El teléfono es requerido" })} error={errors.phone?.message} />
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-5">
-                        <h3 className="text-lg font-semibold text-primary border-b border-glass-border pb-2">Detalles Adicionales</h3>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Biografía</label>
-                            <textarea
-                                {...register("bio")}
-                                rows={4}
-                                className="w-full rounded-xl border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            />
+                    {/* Middle Row: Professional Info */}
+                    <div className="space-y-4 pb-8 border-b border-glass-border">
+                        <h3 className="text-lg font-semibold text-primary">Información Profesional</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Input label="Universidad de Egreso" {...register("university")} />
+                            <Input label="Años de Experiencia Clínica" type="number" {...register("experience")} />
                         </div>
-                        <Input label="Hobbies / Intereses" {...register("hobbies")} />
+                    </div>
+
+                    {/* Bottom Row: Extended Details */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-primary">Sobre Mí</h3>
+                            <span className="text-sm text-gray-400">Esta información se mostrará públicamente en tu perfil</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-gray-700">Biografía Profesional</label>
+                                <textarea
+                                    {...register("bio")}
+                                    rows={5}
+                                    placeholder="Cuéntale a tus futuros pacientes acerca de tu enfoque, tus especialidades y cómo puedes ayudarles..."
+                                    className="w-full rounded-xl border border-input bg-transparent px-4 py-3 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Input
+                                    label="Hobbies e Intereses (Opcional)"
+                                    {...register("hobbies")}
+                                    placeholder="Ej: Yoga, Lectura sobre filosofía, Senderismo..."
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Compartir tus hobbies puede ayudar a los pacientes a conectar mejor contigo.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-glass-border">
@@ -153,17 +201,22 @@ export default function ProfilePage() {
                     {/* Left Column: Summary Card */}
                     <div className="md:col-span-1 space-y-6">
                         <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-sm border border-glass-border text-center transition-all hover:shadow-md">
-                            <div className="w-24 h-24 bg-primary/10 rounded-full mx-auto flex items-center justify-center text-3xl font-bold text-primary mb-6">
-                                {psychologist.firstName[0]}{psychologist.lastName[0]}
+                            <div className="flex justify-center mb-6">
+                                <ProfileImageUpload
+                                    initialImage={psychologist.profilePicture}
+                                    initials={`${psychologist.firstName[0]}${psychologist.lastName[0]}`}
+                                    onImageUpdate={handleImageUpdate}
+                                />
                             </div>
                             <h2 className="text-xl font-bold text-gray-900">{psychologist.firstName} {psychologist.lastName}</h2>
-                            <p className="text-primary font-medium mt-1">{psychologist.specialization}</p>
+                            <div className="flex flex-wrap justify-center gap-1 mt-2 mb-2 max-w-[200px] mx-auto">
+                                {psychologist.tags.filter(t => t !== psychologist.city).map(tag => (
+                                    <span key={tag} className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{tag}</span>
+                                ))}
+                            </div>
                             <div className="mt-6 flex justify-center gap-2 flex-wrap">
                                 <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium border border-green-200">
                                     {psychologist.experience} años exp.
-                                </span>
-                                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium border border-blue-200">
-                                    ${psychologist.price}/sesión
                                 </span>
                             </div>
                         </div>

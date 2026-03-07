@@ -8,7 +8,9 @@ interface RequestOptions extends RequestInit {
 
 export async function fetchClient<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T | null> {
     const headers = new Headers(options.headers);
-    headers.set('Content-Type', 'application/json');
+    if (!(options.body instanceof FormData)) {
+        headers.set('Content-Type', 'application/json');
+    }
 
     if (options.token) {
         headers.set('Authorization', `Bearer ${options.token}`);

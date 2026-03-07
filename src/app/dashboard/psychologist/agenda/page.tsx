@@ -38,7 +38,7 @@ export default function AgendaPage() {
     const [startTime, setStartTime] = useState("08:00");
     const [endTime, setEndTime] = useState("17:00");
 
-    const PSYCHOLOGIST_ID = 1; // Mock ID
+    const [psychologistId, setPsychologistId] = useState<number | null>(null);
 
     useEffect(() => {
         loadData();
@@ -47,8 +47,12 @@ export default function AgendaPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            console.log("Fetching schedule for ID:", PSYCHOLOGIST_ID);
-            const data = await psychologistService.getSchedule(PSYCHOLOGIST_ID);
+            const profile = await psychologistService.getMe();
+            if (!profile) return;
+
+            setPsychologistId(profile.id);
+            console.log("Fetching schedule for ID:", profile.id);
+            const data = await psychologistService.getSchedule(profile.id);
             console.log("Schedule data received:", data);
 
             if (data && Array.isArray(data)) {
@@ -76,6 +80,7 @@ export default function AgendaPage() {
     };
 
     const handleAddSchedules = () => {
+        if (!psychologistId) return;
         if (selectedDays.length === 0) {
             setMessage({ type: 'error', text: "Selecciona al menos un día." });
             return;
@@ -132,7 +137,8 @@ export default function AgendaPage() {
         setIsSaving(true);
         setMessage(null);
         try {
-            await psychologistService.updateSchedule(PSYCHOLOGIST_ID, schedules.map(s => ({
+            if (!psychologistId) return;
+            await psychologistService.updateSchedule(psychologistId, schedules.map(s => ({
                 ...s,
                 startTime: s.startTime + ":00",
                 endTime: s.endTime + ":00"

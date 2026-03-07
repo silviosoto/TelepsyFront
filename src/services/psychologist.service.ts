@@ -14,6 +14,7 @@ export interface PsychologistUI {
     reviews: number;
     available: boolean;
     tags: string[];
+    profilePicture?: string;
 }
 
 // Extended interface for the profile view
@@ -25,13 +26,32 @@ export interface PsychologistProfileUI extends PsychologistUI {
     phone: string; // From person
 }
 
+export interface PatientListItemUI {
+    id: number;
+    fullName: string;
+    profilePicturePath?: string;
+    lastAppointmentDate?: string;
+    sessionCount: number;
+    email?: string;
+    phone?: string;
+}
+
 export const psychologistService = {
     async getVerifiedPsychologists(): Promise<PsychologistUI[]> {
         const data = await fetchClient('/psychologist/verified');
 
         if (!data) return [];
+        return this.mapToUI(data);
+    },
 
-        // Transform API data to UI model
+    async getMe(): Promise<PsychologistProfileUI | null> {
+        const data = await fetchClient('/psychologist/me');
+        if (!data) return null;
+        return this.mapProfileToUI(data);
+    },
+
+    // Refactored mapping to avoid duplication
+    mapToUI(data: any[]): PsychologistUI[] {
         return data.map((psy: any) => ({
             id: psy.id,
             firstName: psy.person?.firstName || 'Unknown',
@@ -39,14 +59,40 @@ export const psychologistService = {
             specialization: psy.specialization,
             city: psy.person?.city || 'Online',
             gender: psy.person?.gender || 'N/A',
-            // Generating mock data for UI demo purposes if not available in API yet
-            experience: psy.experienceYears || Math.floor(Math.random() * 15) + 3,
-            price: psy.sessionRate || 80000 + Math.floor(Math.random() * 5) * 10000,
-            rating: (4 + Math.random()).toFixed(1),
-            reviews: Math.floor(Math.random() * 100) + 10,
-            available: Math.random() > 0.3,
-            tags: [psy.specialization, psy.person?.city || 'Online', 'TCC']
+            experience: psy.experienceYears || 5,
+            price: psy.sessionRate || 100000,
+            rating: (4.5).toFixed(1),
+            reviews: 42,
+            available: true,
+            tags: this.extractTags(psy),
+            profilePicture: psy.profilePicturePath,
         }));
+    },
+
+    extractTags(psy: any): string[] {
+        let extractedTags = [psy.specialization, psy.person?.city || 'Online'];
+        if (psy.specialties && Array.isArray(psy.specialties)) {
+            const dbSpecialties = psy.specialties
+                .filter((s: any) => s.specialty)
+                .map((s: any) => s.specialty.name);
+            if (dbSpecialties.length > 0) {
+                extractedTags = dbSpecialties;
+            }
+        } else {
+            extractedTags.push('TCC');
+        }
+        return extractedTags;
+    },
+
+    mapProfileToUI(psy: any): PsychologistProfileUI {
+        return {
+            ...this.mapToUI([psy])[0],
+            bio: psy.bio || 'Especialista comprometido con el bienestar emocional de sus pacientes.',
+            university: psy.university || 'Universidad Nacional',
+            hobbies: psy.hobbies || 'Lectura, Investigación',
+            email: psy.person?.email || 'contacto@telepsy.com',
+            phone: psy.person?.phoneNumber || 'Confidencial'
+        };
     },
 
     async updateProfile(id: number, profileData: any) {
@@ -56,31 +102,25 @@ export const psychologistService = {
         });
     },
 
+    async updateProfilePicture(id: number, file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return fetchClient(`/psychologist/${id}/upload-profile-picture`, {
+            method: 'POST',
+            body: formData
+        });
+    },
+
     async getPsychologistById(id: number): Promise<PsychologistProfileUI | null> {
         const psy = await fetchClient(`/psychologist/${id}`);
-
         if (!psy) return null;
+        return this.mapProfileToUI(psy);
+    },
 
-        return {
-            id: psy.id,
-            firstName: psy.person?.firstName || 'Unknown',
-            lastName: psy.person?.lastName || 'Psychologist',
-            specialization: psy.specialization,
-            city: psy.person?.city || 'Online',
-            gender: psy.person?.gender || 'N/A',
-            experience: psy.experienceYears || 5,
-            price: psy.sessionRate || 100000,
-            rating: (4.5).toFixed(1), // Mock for now
-            reviews: 42, // Mock for now
-            available: true, // Mock for now
-            tags: [psy.specialization, psy.person?.city || 'Online', 'TCC'],
-            // Profile specific fields
-            bio: psy.bio || 'Especialista comprometido con el bienestar emocional de sus pacientes.',
-            university: psy.university || 'Universidad Nacional',
-            hobbies: psy.hobbies || 'Lectura, Investigación',
-            email: psy.person?.email || 'contacto@telepsy.com', // Note: Email might be on User not Person, check backend if critical
-            phone: psy.person?.phoneNumber || 'Confidencial'
-        };
+    async getPsychologistByUserId(userId: string): Promise<PsychologistProfileUI | null> {
+        const psy = await fetchClient(`/psychologist/by-user/${userId}`);
+        if (!psy) return null;
+        return this.mapProfileToUI(psy);
     },
 
     async getAvailability(id: number, date?: string) {
@@ -118,6 +158,26 @@ export const psychologistService = {
             method: 'PUT',
             body: JSON.stringify(schedules)
         });
+    },
+
+    async getAvailableSpecialties() {
+        return fetchClient('/psychologist/available-specialties');
+    },
+
+    async getPsychologistSpecialties(id: number) {
+        return fetchClient(`/psychologist/${id}/specialties`);
+    },
+
+    async updatePsychologistSpecialty(id: number, specialtyData: { specialtyId: number, isActive: boolean }) {
+        return fetchClient(`/psychologist/${id}/specialties`, {
+            method: 'PUT',
+            body: JSON.stringify(specialtyData)
+        });
+    },
+
+    async getPatients(id: number): Promise<PatientListItemUI[]> {
+        const data = await fetchClient(`/psychologist/${id}/patients`);
+        return data || [];
     }
 };
 

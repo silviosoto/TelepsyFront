@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Calendar, Users, LogOut, Settings, Briefcase, Clock } from "lucide-react";
+import { User, Calendar, Users, LogOut, Settings, Briefcase, Clock, Tag } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 
 const navItems = [
     { name: "Mi Perfil", href: "/dashboard/psychologist/profile", icon: User },
     { name: "Mis Servicios", href: "/dashboard/psychologist/services", icon: Briefcase },
+    { name: "Especialidades", href: "/dashboard/psychologist/specialties", icon: Tag },
     { name: "Mi Agenda", href: "/dashboard/psychologist/agenda", icon: Clock },
     { name: "Mis Citas", href: "/dashboard/psychologist/appointments", icon: Calendar },
     { name: "Mis Pacientes", href: "/dashboard/psychologist/patients", icon: Users },
