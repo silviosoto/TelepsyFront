@@ -73,7 +73,7 @@ export default function ServicesPage() {
             setPsychologistId(profile.id);
 
             const [therapies, currentServices] = await Promise.all([
-                psychologistService.getAvailableTherapies(),
+                psychologistService.getAvailableTherapies("", 4),
                 psychologistService.getServices(profile.id)
             ]);
 
@@ -81,18 +81,16 @@ export default function ServicesPage() {
 
             // Map current services
             const mapped = (currentServices as any[]).map(s => {
-                const therapyInfo = (therapies as any[]).find(t => t.id === s.therapyId);
                 return {
                     therapyId: s.therapyId,
-                    therapyName: therapyInfo?.name || "Servicio desconocido",
-                    description: therapyInfo?.description || "",
+                    therapyName: s.therapyName || "Servicio desconocido",
+                    description: s.therapyDescription || "",
                     rate: s.rate,
                     isActive: s.isActive,
                     isModified: false,
                     isSaving: false
                 };
             });
-
             setMyServices(mapped);
         } catch (error) {
             console.error("Error loading services:", error);
@@ -101,6 +99,23 @@ export default function ServicesPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (!isSearchFocused && !searchQuery) return;
+
+        const fetchSearchResults = async () => {
+            try {
+                const results = await psychologistService.getAvailableTherapies(searchQuery, searchQuery ? undefined : 4);
+                setAllTherapies(results as Therapy[]);
+            } catch (error) {
+                console.error("Error fetching therapies:", error);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchSearchResults, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, isSearchFocused]);
+
 
     const handleSave = async (service: ServiceState) => {
         if (!psychologistId) return;
@@ -187,9 +202,7 @@ export default function ServicesPage() {
     };
 
     const filteredAvailableTherapies = allTherapies.filter(t =>
-        !myServices.find(ms => ms.therapyId === t.id) &&
-        (t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        !myServices.find(ms => ms.therapyId === t.id)
     );
 
     if (loading) {

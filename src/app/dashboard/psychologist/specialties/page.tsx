@@ -69,7 +69,7 @@ export default function SpecialtiesPage() {
             const psychologistId = profile.id;
 
             const [specialtiesResponse, currentSpecialtiesResponse] = await Promise.all([
-                psychologistService.getAvailableSpecialties(),
+                psychologistService.getAvailableSpecialties("", 4),
                 psychologistService.getPsychologistSpecialties(profile.id)
             ]);
 
@@ -94,6 +94,22 @@ export default function SpecialtiesPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (!isSearchFocused && !searchQuery) return;
+
+        const fetchSearchResults = async () => {
+            try {
+                const results = await psychologistService.getAvailableSpecialties(searchQuery, searchQuery ? undefined : 4);
+                setAllSpecialties(results as Specialty[]);
+            } catch (error) {
+                console.error("Error fetching specialties:", error);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchSearchResults, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, isSearchFocused]);
 
     const handleToggleSpecialty = async (specialty: Specialty) => {
         if (!psychologistId) return;
@@ -129,9 +145,7 @@ export default function SpecialtiesPage() {
     };
 
     const filteredAvailableSpecialties = allSpecialties.filter(t =>
-        !mySpecialties.find(ms => ms.specialtyId === t.id) &&
-        (t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        !mySpecialties.find(ms => ms.specialtyId === t.id)
     );
 
     if (loading) {

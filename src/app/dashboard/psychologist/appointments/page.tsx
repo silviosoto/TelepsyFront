@@ -257,12 +257,15 @@ export default function AppointmentsPage() {
                     <div className="divide-y divide-gray-100">
                         {appointments.map((appointment) => (
                             <div key={appointment.id} className="p-6 hover:bg-white/80 transition-all flex flex-col md:flex-row gap-6 items-start md:items-center justify-between group">
-                                <div className="flex gap-4 items-center">
-                                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                                <div
+                                    className="flex gap-4 items-center cursor-pointer group/patient"
+                                    onClick={() => router.push(`/dashboard/psychologist/patients/${appointment.patientId}`)}
+                                >
+                                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover/patient:scale-105 transition-transform">
                                         <User className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-900 text-lg">
+                                        <h3 className="font-bold text-gray-900 text-lg group-hover/patient:text-primary transition-colors">
                                             {appointment.patient?.person?.firstName} {appointment.patient?.person?.lastName}
                                         </h3>
                                         <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
@@ -313,10 +316,6 @@ export default function AppointmentsPage() {
                                             )}
                                         </div>
                                     )}
-                                    <Button variant="ghost" className="text-sm whitespace-nowrap">
-                                        Detalles
-                                        <ChevronRight className="h-4 w-4 ml-1" />
-                                    </Button>
                                     <Button
                                         variant="outline"
                                         className="text-xs h-8 gap-2 border-primary/20 text-primary hover:bg-primary/5"

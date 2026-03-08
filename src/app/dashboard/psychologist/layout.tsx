@@ -16,9 +16,7 @@ export default function PsychologistDashboardLayout({
 
             {/* Mobile Header */}
             <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-glass-border md:hidden z-20 flex items-center justify-between px-4">
-                <Link href="/dashboard/psychologist">
-                    <Logo />
-                </Link>
+                <Logo />
                 <button className="p-2 text-gray-600">
                     <Menu className="h-6 w-6" />
                 </button>

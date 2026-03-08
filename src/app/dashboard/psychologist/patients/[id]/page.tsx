@@ -155,6 +155,18 @@ export default function PatientProfileDetailPage() {
                     <Button className="w-full rounded-2xl h-14 font-bold gap-2">
                         <MessageSquare className="w-5 h-5" /> Enviar Mensaje
                     </Button>
+                    <Button
+                        onClick={() => router.push(`/dashboard/psychologist/patients/${params.id}/notes`)}
+                        variant="outline"
+                        className="w-full rounded-2xl h-14 font-bold gap-2 border-primary/20 text-primary hover:bg-primary/5">
+                        <FileText className="w-5 h-5" /> Notas de Sesión
+                    </Button>
+                    <Button
+                        onClick={() => router.push(`/dashboard/psychologist/patients/${params.id}/history`)}
+                        variant="outline"
+                        className="w-full rounded-2xl h-14 font-bold gap-2 border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5">
+                        <Activity className="w-5 h-5" /> Historia Clínica
+                    </Button>
                 </div>
 
                 {/* Right: Detailed Info & History */}

@@ -128,8 +128,12 @@ export const psychologistService = {
         });
     },
 
-    async getAvailableTherapies() {
-        return fetchClient('/psychologist/available-therapies');
+    async getAvailableTherapies(query?: string, limit?: number) {
+        const params = new URLSearchParams();
+        if (query) params.append('query', query);
+        if (limit) params.append('limit', limit.toString());
+        const queryString = params.toString();
+        return fetchClient(`/psychologist/available-therapies${queryString ? `?${queryString}` : ''}`);
     },
 
     async getServices(id: number) {
@@ -154,8 +158,12 @@ export const psychologistService = {
         });
     },
 
-    async getAvailableSpecialties() {
-        return fetchClient('/psychologist/available-specialties');
+    async getAvailableSpecialties(query?: string, limit?: number) {
+        const params = new URLSearchParams();
+        if (query) params.append('query', query);
+        if (limit) params.append('limit', limit.toString());
+        const queryString = params.toString();
+        return fetchClient(`/psychologist/available-specialties${queryString ? `?${queryString}` : ''}`);
     },
 
     async getPsychologistSpecialties(id: number) {

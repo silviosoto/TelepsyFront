@@ -25,9 +25,7 @@ export default function PatientDashboardLayout({
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r border-glass-border hidden md:flex flex-col fixed h-full z-20">
                 <div className="p-6 border-b border-glass-border">
-                    <Link href="/dashboard/patient">
-                        <Logo />
-                    </Link>
+                    <Logo />
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">
@@ -59,9 +57,7 @@ export default function PatientDashboardLayout({
 
             {/* Mobile Header (TODO: Add functionality) */}
             <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-glass-border md:hidden z-20 flex items-center justify-between px-4">
-                <Link href="/dashboard/patient">
-                    <Logo />
-                </Link>
+                <Logo />
                 {/* Mobile menu toggle would go here */}
             </div>
 
