@@ -149,7 +149,8 @@ export default function AdminPsychologistsPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.05 }}
-                                        className="border-b border-glass-border/50 hover:bg-secondary/5 transition-colors group"
+                                        className="border-b border-glass-border/50 hover:bg-secondary/5 transition-colors group cursor-pointer"
+                                        onClick={() => window.location.href = `/dashboard/admin/psychologists/${psych.id}`}
                                     >
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
