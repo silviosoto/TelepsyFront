@@ -41,8 +41,16 @@ export const adminService = {
         return fetchClient(`/Admin/psychologists/${id}/appointments?${queryParams.toString()}`);
     },
 
-    async getPsychologistPayments(id: number) {
-        return fetchClient(`/Admin/psychologists/${id}/payments`);
+    async getPsychologistPayments(id: number, page: number = 1, pageSize: number = 10, searchTerm?: string, status?: string, startDate?: string, endDate?: string) {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page.toString());
+        queryParams.append('pageSize', pageSize.toString());
+        if (searchTerm) queryParams.append('searchTerm', searchTerm);
+        if (status && status !== 'all') queryParams.append('status', status);
+        if (startDate) queryParams.append('startDate', startDate);
+        if (endDate) queryParams.append('endDate', endDate);
+
+        return fetchClient(`/Admin/psychologists/${id}/payments?${queryParams.toString()}`);
     },
 
     async approvePsychologist(id: number) {

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     ChevronLeft, Mail, Phone, MapPin, Calendar, GraduationCap,
     Award, Download, CreditCard, Clock, User, CheckCircle,
-    XCircle, Briefcase, Heart, Star, Trash2, RotateCcw
+    XCircle, Briefcase, Heart, Star, Trash2, RotateCcw, Search
 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { adminService } from "@/services/admin.service";
@@ -24,6 +24,12 @@ export default function PsychologistDetailsPage() {
     const [appointmentsStartDate, setAppointmentsStartDate] = useState("");
     const [appointmentsEndDate, setAppointmentsEndDate] = useState("");
     const [payments, setPayments] = useState<any[]>([]);
+    const [totalPayments, setTotalPayments] = useState(0);
+    const [paymentsPage, setPaymentsPage] = useState(1);
+    const [paymentsSearch, setPaymentsSearch] = useState("");
+    const [paymentsStatus, setPaymentsStatus] = useState("all");
+    const [paymentsStartDate, setPaymentsStartDate] = useState("");
+    const [paymentsEndDate, setPaymentsEndDate] = useState("");
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchPsychologistDetails = async () => {
@@ -59,10 +65,20 @@ export default function PsychologistDetailsPage() {
     const fetchPayments = async () => {
         try {
             const psiId = parseInt(id as string);
-            const pays = await adminService.getPsychologistPayments(psiId);
-            setPayments(pays || []);
+            const response = await adminService.getPsychologistPayments(
+                psiId,
+                paymentsPage,
+                10,
+                paymentsSearch,
+                paymentsStatus,
+                paymentsStartDate,
+                paymentsEndDate
+            );
+            setPayments(response.data || []);
+            setTotalPayments(response.totalCount || 0);
         } catch (error) {
             console.error(error);
+            toast.error("Error al cargar los pagos.");
         }
     };
 
@@ -86,11 +102,25 @@ export default function PsychologistDetailsPage() {
         }
     }, [appointmentsPage, appointmentsSearch, appointmentsStartDate, appointmentsEndDate]);
 
+    useEffect(() => {
+        if (!isLoading) {
+            fetchPayments();
+        }
+    }, [paymentsPage, paymentsSearch, paymentsStatus, paymentsStartDate, paymentsEndDate]);
+
     const clearFilters = () => {
         setAppointmentsSearch("");
         setAppointmentsStartDate("");
         setAppointmentsEndDate("");
         setAppointmentsPage(1);
+    };
+
+    const clearPaymentFilters = () => {
+        setPaymentsSearch("");
+        setPaymentsStatus("all");
+        setPaymentsStartDate("");
+        setPaymentsEndDate("");
+        setPaymentsPage(1);
     };
 
     const handleApproveStatus = async () => {
@@ -481,8 +511,90 @@ export default function PsychologistDetailsPage() {
                                 </div>
 
                                 <div className="bg-white rounded-3xl border border-glass-border shadow-sm overflow-hidden">
-                                    <div className="p-6 border-b border-glass-border flex justify-between items-center">
-                                        <h3 className="font-bold text-foreground">Relación de Pagos</h3>
+                                    <div className="p-6 border-b border-glass-border space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="font-bold text-foreground">Relación de Pagos</h3>
+                                            <span className="text-xs bg-secondary/20 px-3 py-1 rounded-full font-bold">Total: {totalPayments}</span>
+                                        </div>
+
+                                        {/* Filters Bar */}
+                                        <div className="flex flex-wrap gap-3 items-end">
+                                            <div className="flex-1 min-w-[200px]">
+                                                <span className="text-[10px] uppercase font-bold text-foreground/40 ml-1 mb-1 block">Buscar Paciente o Ref.</span>
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Nombre o Transacción..."
+                                                        className="w-full pl-10 pr-4 py-2 bg-secondary/5 border border-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                                        value={paymentsSearch}
+                                                        onChange={(e) => {
+                                                            setPaymentsSearch(e.target.value);
+                                                            setPaymentsPage(1);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="min-w-[140px]">
+                                                <span className="text-[10px] uppercase font-bold text-foreground/40 ml-1 mb-1 block">Estado</span>
+                                                <select
+                                                    className="w-full px-4 py-2 bg-secondary/5 border border-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium appearance-none"
+                                                    value={paymentsStatus}
+                                                    onChange={(e) => {
+                                                        setPaymentsStatus(e.target.value);
+                                                        setPaymentsPage(1);
+                                                    }}
+                                                >
+                                                    <option value="all">Todos</option>
+                                                    <option value="Completed">Completado</option>
+                                                    <option value="Pending">Pendiente</option>
+                                                    <option value="Approved">Aprobado</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="min-w-[140px]">
+                                                <span className="text-[10px] uppercase font-bold text-foreground/40 ml-1 mb-1 block">Desde</span>
+                                                <div className="relative">
+                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                                                    <input
+                                                        type="date"
+                                                        className="w-full pl-10 pr-4 py-2 bg-secondary/5 border border-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                                        value={paymentsStartDate}
+                                                        onChange={(e) => {
+                                                            setPaymentsStartDate(e.target.value);
+                                                            setPaymentsPage(1);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="min-w-[140px]">
+                                                <span className="text-[10px] uppercase font-bold text-foreground/40 ml-1 mb-1 block">Hasta</span>
+                                                <div className="relative">
+                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                                                    <input
+                                                        type="date"
+                                                        className="w-full pl-10 pr-4 py-2 bg-secondary/5 border border-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                                        value={paymentsEndDate}
+                                                        onChange={(e) => {
+                                                            setPaymentsEndDate(e.target.value);
+                                                            setPaymentsPage(1);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={clearPaymentFilters}
+                                                className="rounded-xl h-10 w-10 p-0 border-dashed border-foreground/20 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
+                                                title="Limpiar filtros"
+                                            >
+                                                <RotateCcw className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
@@ -509,7 +621,7 @@ export default function PsychologistDetailsPage() {
                                                             <td className="p-4 font-bold text-foreground">{p.patientName}</td>
                                                             <td className="p-4 font-medium text-foreground/60">{new Date(p.date).toLocaleDateString()}</td>
                                                             <td className="p-4">
-                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${p.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${p.status === 'Completed' || p.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                                                                     }`}>
                                                                     {p.status}
                                                                 </span>
@@ -523,6 +635,38 @@ export default function PsychologistDetailsPage() {
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    {/* Pagination Footer for Payments */}
+                                    {totalPayments > 10 && (
+                                        <div className="p-6 border-t border-glass-border flex items-center justify-between">
+                                            <p className="text-xs text-foreground/40 font-medium">
+                                                Mostrando {payments.length} de {totalPayments} pagos
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setPaymentsPage(prev => Math.max(1, prev - 1))}
+                                                    disabled={paymentsPage === 1}
+                                                    className="rounded-xl"
+                                                >
+                                                    Anterior
+                                                </Button>
+                                                <div className="flex items-center px-4 text-sm font-bold text-primary bg-primary/5 rounded-xl">
+                                                    {paymentsPage}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setPaymentsPage(prev => prev + 1)}
+                                                    disabled={paymentsPage * 10 >= totalPayments}
+                                                    className="rounded-xl"
+                                                >
+                                                    Siguiente
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         )}
