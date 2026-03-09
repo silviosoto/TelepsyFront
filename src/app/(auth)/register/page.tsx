@@ -10,8 +10,8 @@ import { Input } from "@/components/Input";
 import { useRouter } from "next/navigation";
 
 enum Role {
-    PATIENT = "PATIENT",
-    PSYCHOLOGIST = "PSYCHOLOGIST"
+    PATIENT = "Patient",
+    PSYCHOLOGIST = "Psychologist"
 }
 
 export default function RegisterPage() {
@@ -22,10 +22,9 @@ export default function RegisterPage() {
         lastName: "",
         email: "",
         phoneNumber: "",
-        password: "",
-        professionalCard: "",
-        specialty: "Psicología Clínica"
+        password: ""
     });
+    const [cvFile, setCvFile] = useState<File | null>(null);
     const [error, setError] = useState("");
     const router = useRouter();
 
@@ -44,23 +43,28 @@ export default function RegisterPage() {
 
         try {
             const endpoint = 'http://localhost:5002/api/auth/register';
-            const payload = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                phoneNumber: formData.phoneNumber,
-                password: formData.password,
-                role: role,
-                ...(role === Role.PSYCHOLOGIST && {
-                    professionalLicenseNumber: formData.professionalCard,
-                    specialization: formData.specialty
-                })
-            };
+
+            const payload = new FormData();
+            payload.append("FirstName", formData.firstName);
+            payload.append("LastName", formData.lastName);
+            payload.append("Email", formData.email);
+            payload.append("Password", formData.password);
+            payload.append("Role", role);
+
+            // Additional fields logic can go here if needed, such as phoneNumber 
+            // the DTO does not have phone number but I will pass it if they ever add it
+            // payload.append("PhoneNumber", formData.phoneNumber);
+
+            if (role === Role.PSYCHOLOGIST) {
+                if (!cvFile) {
+                    throw new Error("Debes adjuntar tu hoja de vida (CV) con el Rethus incluido.");
+                }
+                payload.append("CvFile", cvFile);
+            }
 
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: payload
             });
 
             const data = await response.json();
@@ -125,8 +129,8 @@ export default function RegisterPage() {
                         <button
                             onClick={() => handleRoleChange(Role.PATIENT)}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${role === Role.PATIENT
-                                    ? "bg-white shadow-md text-primary"
-                                    : "text-foreground/60 hover:bg-white/50 hover:text-foreground"
+                                ? "bg-white shadow-md text-primary"
+                                : "text-foreground/60 hover:bg-white/50 hover:text-foreground"
                                 }`}
                         >
                             <User className="w-4 h-4" /> Soy Paciente
@@ -134,8 +138,8 @@ export default function RegisterPage() {
                         <button
                             onClick={() => handleRoleChange(Role.PSYCHOLOGIST)}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${role === Role.PSYCHOLOGIST
-                                    ? "bg-white shadow-md text-secondary"
-                                    : "text-foreground/60 hover:bg-white/50 hover:text-foreground"
+                                ? "bg-white shadow-md text-secondary"
+                                : "text-foreground/60 hover:bg-white/50 hover:text-foreground"
                                 }`}
                         >
                             <Briefcase className="w-4 h-4" /> Soy Psicólogo
@@ -176,19 +180,20 @@ export default function RegisterPage() {
                                     animate={{ opacity: 1, height: "auto" }}
                                     className="space-y-4 pt-4 border-t border-glass-border"
                                 >
-                                    <Input label="Número de Tarjeta Profesional" name="professionalCard" placeholder="TP-123456" required onChange={handleChange} />
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1.5 ml-1">Especialidad Principal</label>
-                                        <select
-                                            name="specialty"
-                                            onChange={handleChange}
-                                            className="w-full h-12 rounded-xl border border-input bg-background/50 px-4 text-sm focus:ring-2 focus:ring-secondary"
-                                        >
-                                            <option>Psicología Clínica</option>
-                                            <option>Terapia de Pareja</option>
-                                            <option>Psicología Infantil</option>
-                                            <option>Neuropsicología</option>
-                                        </select>
+                                        <label className="block text-sm font-medium text-foreground mb-1.5 ml-1">
+                                            Hoja de Vida (CV)
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={(e) => setCvFile(e.target.files?.[0] || null)}
+                                            className="w-full h-12 rounded-xl border border-input bg-background/50 px-4 text-sm focus:ring-2 focus:ring-secondary pt-2"
+                                            required
+                                        />
+                                        <p className="text-xs text-foreground/50 mt-1 ml-1">
+                                            Debes adjuntar tu Hoja de Vida, la cual debe incluir el Rethus.
+                                        </p>
                                     </div>
                                     <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-lg text-xs text-yellow-700">
                                         ℹ️ Tu perfil pasará por un proceso de verificación manual antes de ser activado.
