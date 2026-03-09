@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, LogOut, LayoutDashboard } from "lucide-react";
+import { Users, LogOut, LayoutDashboard, CreditCard } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 import { authService } from "@/services/auth.service";
@@ -11,6 +11,7 @@ const navItems = [
     { name: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
     { name: "Psicólogos", href: "/dashboard/admin/psychologists", icon: Users },
     { name: "Pacientes", href: "/dashboard/admin/patients", icon: Users },
+    { name: "Gestión de Pagos", href: "/dashboard/admin/payments", icon: CreditCard },
 ];
 
 export function AdminSidebar() {

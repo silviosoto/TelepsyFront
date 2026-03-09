@@ -64,5 +64,16 @@ export const adminService = {
             method: 'POST',
             body: JSON.stringify({ reason })
         });
+    },
+
+    async getPaymentManagement() {
+        return fetchClient(`/Admin/payments`);
+    },
+
+    async processPayout(payoutRequest: { psychologistId: number, appointmentIds: number[] }) {
+        return fetchClient(`/Admin/payments/payout`, {
+            method: 'POST',
+            body: JSON.stringify(payoutRequest)
+        });
     }
 };
