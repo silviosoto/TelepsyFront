@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { User, Calendar, CreditCard, Home, LogOut, Settings } from "lucide-react";
+import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 
@@ -19,6 +21,13 @@ export default function PatientDashboardLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!authService.isAuthenticated()) {
+            router.replace('/login');
+        }
+    }, [router]);
 
     return (
         <div className="min-h-screen bg-background flex">
@@ -46,12 +55,17 @@ export default function PatientDashboardLayout({
                 </nav>
 
                 <div className="p-4 border-t border-glass-border">
-                    <Link href="/login">
-                        <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50">
-                            <LogOut className="w-4 h-4 mr-2" />
-                            Cerrar Sesión
-                        </Button>
-                    </Link>
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                            authService.logout();
+                            window.location.replace('/login');
+                        }}
+                    >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Cerrar Sesión
+                    </Button>
                 </div>
             </aside>
 

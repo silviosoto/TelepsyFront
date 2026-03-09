@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Calendar, Users, LogOut, Settings, Briefcase, Clock, Tag } from "lucide-react";
+import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 
@@ -44,12 +45,17 @@ export function Sidebar() {
             </nav>
 
             <div className="p-4 border-t border-glass-border">
-                <Link href="/login">
-                    <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50">
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Cerrar Sesión
-                    </Button>
-                </Link>
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                        authService.logout();
+                        window.location.replace('/login');
+                    }}
+                >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Cerrar Sesión
+                </Button>
             </div>
         </aside>
     );

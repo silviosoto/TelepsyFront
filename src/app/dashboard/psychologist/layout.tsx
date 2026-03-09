@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { authService } from "@/services/auth.service";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Logo } from "@/components/Logo";
 import Link from "next/link";
@@ -10,6 +13,14 @@ export default function PsychologistDashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!authService.isAuthenticated()) {
+            router.replace('/login');
+        }
+    }, [router]);
+
     return (
         <div className="min-h-screen bg-background flex">
             <Sidebar />
