@@ -1,0 +1,52 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { authService } from "@/services/auth.service";
+import { AdminSidebar } from "@/components/dashboard/AdminSidebar";
+import { Logo } from "@/components/Logo";
+import { Menu } from "lucide-react";
+
+export default function AdminDashboardLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!authService.isAuthenticated()) {
+            router.replace('/login');
+        } else {
+            const userStr = localStorage.getItem("user");
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user.role !== "Admin") {
+                    router.replace('/login');
+                }
+            } else {
+                router.replace('/login');
+            }
+        }
+    }, [router]);
+
+    return (
+        <div className="min-h-screen bg-background flex">
+            <AdminSidebar />
+
+            {/* Mobile Header */}
+            <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-glass-border md:hidden z-20 flex items-center justify-between px-4">
+                <Logo />
+                <button className="p-2 text-gray-600">
+                    <Menu className="h-6 w-6" />
+                </button>
+            </div>
+
+            <main className="flex-1 md:ml-64 p-8 pt-24 md:pt-8 bg-secondary/5 min-h-screen">
+                <div className="max-w-7xl mx-auto items-center justify-center">
+                    {children}
+                </div>
+            </main>
+        </div>
+    );
+}

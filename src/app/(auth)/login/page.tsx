@@ -44,7 +44,9 @@ export default function LoginPage() {
             };
             localStorage.setItem('user', JSON.stringify(user));
 
-            if (data.role === "Psychologist" || email.includes("psych")) {
+            if (data.role === "Admin") {
+                router.push("/dashboard/admin");
+            } else if (data.role === "Psychologist" || email.includes("psych")) {
                 router.push("/dashboard/psychologist");
             } else {
                 router.push("/dashboard/patient");
