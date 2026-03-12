@@ -21,6 +21,7 @@ import { Button } from "@/components/Button";
 import { appointmentService } from "@/services/appointment.service";
 import { paymentService } from "@/services/payment.service";
 import { toast } from "sonner";
+import { parseApiDate } from "@/lib/utils";
 
 interface CheckoutSummary {
     appointmentId: number;
@@ -98,7 +99,7 @@ export default function CheckoutPage() {
 
     if (!summary) return null;
 
-    const scheduledDate = new Date(summary.scheduledTime);
+    const scheduledDate = parseApiDate(summary.scheduledTime);
     const formattedDate = scheduledDate.toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',

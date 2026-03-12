@@ -7,6 +7,7 @@ import { psychologistService } from "@/services/psychologist.service";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Clock, User, FileText } from "lucide-react";
+import { parseApiDate } from "@/lib/utils";
 
 interface Appointment {
     id: number;
@@ -167,7 +168,7 @@ export default function AppointmentsPage() {
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('es-ES', {
+        return parseApiDate(dateString).toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -271,11 +272,11 @@ export default function AppointmentsPage() {
                                         <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                                             <div className="flex items-center gap-1">
                                                 <Calendar className="h-3.5 w-3.5" />
-                                                <span>{new Date(appointment.scheduledTime).toLocaleDateString()}</span>
+                                                <span>{parseApiDate(appointment.scheduledTime).toLocaleDateString()}</span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Clock className="h-3.5 w-3.5" />
-                                                <span>{new Date(appointment.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span>{parseApiDate(appointment.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
                                             <span className="text-gray-300">|</span>
                                             <span>{appointment.durationMinutes} min</span>
@@ -294,7 +295,7 @@ export default function AppointmentsPage() {
                                                 Unirse a Llamada
                                             </Button>
 
-                                            {new Date(appointment.scheduledTime) < new Date() && (
+                                            {parseApiDate(appointment.scheduledTime) < new Date() && (
                                                 <div className="flex gap-2">
                                                     <Button
                                                         variant="outline"

@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { appointmentService } from "@/services/appointment.service";
 import { Button } from "@/components/Button";
 import { toast } from "sonner";
+import { parseApiDate } from "@/lib/utils";
 
 interface Appointment {
     id: number;
@@ -185,10 +186,7 @@ export default function AppointmentsPage() {
                                 const status = getStatusInfo(app.status, app.scheduledTime);
                                 const isUpcoming = app.status === 1 || app.status === 0;
 
-                                // Ajustar a horario de Colombia (America/Bogota)
-                                const utcDate = new Date(app.scheduledTime);
-                                const bogotaDateStr = utcDate.toLocaleString("en-US", { timeZone: "America/Bogota" });
-                                const dateObj = new Date(bogotaDateStr);
+                                const dateObj = parseApiDate(app.scheduledTime);
 
                                 return (
                                     <motion.div
