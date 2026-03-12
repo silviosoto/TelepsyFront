@@ -15,6 +15,9 @@ export interface PsychologistUI {
     available: boolean;
     tags: string[];
     profilePicture?: string;
+    isVerified: boolean;
+    services: string[];
+    specialties: string[];
 }
 
 // Extended interface for the profile view
@@ -24,6 +27,8 @@ export interface PsychologistProfileUI extends PsychologistUI {
     hobbies: string;
     email: string; // From user/person
     phone: string; // From person
+    state: string; // From person (Department)
+    licenseNumber: string;
 }
 
 export interface PatientListItemUI {
@@ -60,22 +65,40 @@ export const psychologistService = {
             available: true,
             tags: this.extractTags(psy),
             profilePicture: psy.profilePicturePath,
+            isVerified: psy.isVerified || false,
+            services: psy.therapies?.filter((t: any) => t.therapy).map((t: any) => t.therapy.name) || [],
+            specialties: psy.specialties?.filter((s: any) => s.specialty).map((s: any) => s.specialty.name) || [],
         }));
     },
 
     extractTags(psy: any): string[] {
-        let extractedTags = [psy.specialization, psy.person?.city || 'Online'];
+        const tags: string[] = [];
+
+        // Add city or Online status
+        const city = psy.person?.city;
+        if (city && city !== 'Sin ciudad' && city !== 'Online') {
+            tags.push(city);
+        } else {
+            tags.push('Online');
+        }
+
+        // Add specialization only if it's not "Pendiente"
+        if (psy.specialization && psy.specialization !== 'Pendiente') {
+            tags.push(psy.specialization);
+        }
+
+        // Add specialties from the list if they exist
         if (psy.specialties && Array.isArray(psy.specialties)) {
             const dbSpecialties = psy.specialties
                 .filter((s: any) => s.specialty)
                 .map((s: any) => s.specialty.name);
-            if (dbSpecialties.length > 0) {
-                extractedTags = dbSpecialties;
-            }
-        } else {
-            extractedTags.push('TCC');
+
+            dbSpecialties.forEach((s: string) => {
+                if (!tags.includes(s)) tags.push(s);
+            });
         }
-        return extractedTags;
+
+        return tags;
     },
 
     mapProfileToUI(psy: any): PsychologistProfileUI {
@@ -85,7 +108,9 @@ export const psychologistService = {
             university: psy.university || 'Universidad Nacional',
             hobbies: psy.hobbies || 'Lectura, Investigación',
             email: psy.person?.email || 'contacto@telepsy.com',
-            phone: psy.person?.phoneNumber || 'Confidencial'
+            phone: psy.person?.phoneNumber || 'Confidencial',
+            state: psy.person?.state || 'Sin departamento',
+            licenseNumber: psy.licenseNumber || 'Pendiente'
         };
     },
 

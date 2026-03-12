@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Star, MapPin, Calendar, ArrowRight, User } from "lucide-react";
+import { Search, Filter, Star, MapPin, Calendar, ArrowRight, User, CheckCircle, Briefcase, Heart, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/sections/Footer";
 import { Button } from "@/components/Button";
@@ -45,7 +45,8 @@ export default function PsychologistsPage() {
         const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             psy.specialization.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesSpecialty = selectedSpecialty === "Todas" || psy.specialization.includes(selectedSpecialty);
-        return matchesSearch && matchesSpecialty;
+        const isVerified = psy.isVerified === true;
+        return matchesSearch && matchesSpecialty && isVerified;
     });
 
     // Pagination Logic
@@ -142,19 +143,34 @@ export default function PsychologistsPage() {
                                         >
                                             <div className="premium-card h-full bg-white border border-glass-border hover:border-primary/30 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 flex flex-col overflow-hidden relative">
 
-                                                {psy.available && (
-                                                    <div className="absolute top-4 right-4 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                        Disponible Hoy
-                                                    </div>
-                                                )}
+                                                <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                                                    {psy.isVerified && (
+                                                        <div className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20 flex items-center gap-1">
+                                                            <CheckCircle className="w-3 h-3" /> Verificado
+                                                        </div>
+                                                    )}
+                                                    {psy.available && (
+                                                        <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                            Disponible
+                                                        </div>
+                                                    )}
+                                                </div>
 
                                                 <div className="p-6 pb-0 flex gap-4">
                                                     <div className="w-20 h-20 rounded-2xl bg-secondary/20 flex-shrink-0 relative overflow-hidden">
-                                                        {/* Placeholder for Avatar */}
-                                                        <div className="absolute inset-0 flex items-center justify-center text-primary font-bold text-2xl">
-                                                            {psy.firstName[0]}{psy.lastName[0]}
-                                                        </div>
+                                                        {psy.profilePicture ? (
+                                                            <Image
+                                                                src={psy.profilePicture}
+                                                                alt={`${psy.firstName} ${psy.lastName}`}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="absolute inset-0 flex items-center justify-center text-primary font-bold text-2xl">
+                                                                {psy.firstName[0]}{psy.lastName[0]}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">{psy.firstName} {psy.lastName}</h3>
@@ -180,12 +196,34 @@ export default function PsychologistsPage() {
                                                         <span>{psy.experience} años de experiencia</span>
                                                     </div>
 
-                                                    <div className="pt-4 border-t border-glass-border flex justify-between items-end">
-                                                        <div>
-                                                            <p className="text-xs text-foreground/50 mb-1">Sesión online</p>
-                                                            <p className="text-xl font-bold text-foreground">
-                                                                ${psy.price.toLocaleString()} <span className="text-sm font-normal text-foreground/50">/cop</span>
-                                                            </p>
+                                                    <div className="pt-4 border-t border-glass-border">
+                                                        <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                            <Sparkles className="w-3 h-3" /> Servicios relacionados
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {(() => {
+                                                                const allServices = Array.from(new Set([
+                                                                    psy.specialization,
+                                                                    ...psy.specialties,
+                                                                    ...psy.services
+                                                                ])).filter(s => s && s !== 'Pendiente');
+
+                                                                if (allServices.length > 0) {
+                                                                    return (
+                                                                        <>
+                                                                            {allServices.slice(0, 4).map(item => (
+                                                                                <span key={item} className="text-[10px] bg-primary/5 text-primary border border-primary/10 px-2 py-0.5 rounded-full font-medium">
+                                                                                    {item}
+                                                                                </span>
+                                                                            ))}
+                                                                            {allServices.length > 4 && (
+                                                                                <span className="text-[10px] text-foreground/40 font-medium self-center">+{allServices.length - 4} más</span>
+                                                                            )}
+                                                                        </>
+                                                                    );
+                                                                }
+                                                                return <span className="text-[10px] text-foreground/40 italic">Enfoque clínico integral</span>;
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -265,22 +303,3 @@ export default function PsychologistsPage() {
     );
 }
 
-function Briefcase(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-        </svg>
-    )
-}

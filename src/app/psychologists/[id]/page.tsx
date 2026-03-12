@@ -199,14 +199,29 @@ export default function PsychologistProfilePage() {
                             className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 border border-glass-border flex flex-col md:flex-row gap-6 items-start"
                         >
                             <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-secondary/20 flex-shrink-0 relative overflow-hidden flex items-center justify-center text-4xl text-primary font-bold">
-                                {psychologist.firstName[0]}{psychologist.lastName[0]}
+                                {psychologist.profilePicture ? (
+                                    <Image
+                                        src={psychologist.profilePicture}
+                                        alt={`${psychologist.firstName} ${psychologist.lastName}`}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <>{psychologist.firstName[0]}{psychologist.lastName[0]}</>
+                                )}
                             </div>
 
                             <div className="flex-1">
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                    <span className="bg-emerald-500/10 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                                        <Shield className="w-3 h-3" /> Verificado
-                                    </span>
+                                    {psychologist.isVerified ? (
+                                        <span className="bg-emerald-500/10 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <Shield className="w-3 h-3" /> Verificado
+                                        </span>
+                                    ) : (
+                                        <span className="bg-amber-500/10 text-amber-600 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <Clock className="w-3 h-3" /> Pendiente de Verificación
+                                        </span>
+                                    )}
                                     <span className="bg-secondary/10 text-foreground/70 text-xs font-bold px-3 py-1 rounded-full">
                                         {psychologist.experience} años exp.
                                     </span>
@@ -457,16 +472,26 @@ export default function PsychologistProfilePage() {
 
                                     <Button
                                         className="w-full h-12 text-lg font-bold rounded-xl mt-4"
-                                        disabled={!selectedTime || !selectedService || isBooking}
+                                        disabled={!selectedTime || !selectedService || isBooking || !psychologist.isVerified}
                                         onClick={handleBooking}
                                         isLoading={isBooking}
                                     >
-                                        {isBooking ? "Procesando..." : "Reservar Cita"}
+                                        {!psychologist.isVerified ? "No Disponible" : isBooking ? "Procesando..." : "Reservar Cita"}
                                     </Button>
 
-                                    <p className="text-xs text-center text-foreground/40 mt-4">
-                                        No se cobrará nada hasta confirmar la reserva.
-                                    </p>
+                                    {!psychologist.isVerified && (
+                                        <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                            <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                                                Este profesional se encuentra actualmente en proceso de validación por parte del equipo administrativo. Las reservas estarán habilitadas una vez su perfil sea verificado.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {psychologist.isVerified && (
+                                        <p className="text-xs text-center text-foreground/40 mt-4">
+                                            No se cobrará nada hasta confirmar la reserva.
+                                        </p>
+                                    )}
                                 </div>
                             </motion.div>
                         </div>

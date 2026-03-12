@@ -5,8 +5,10 @@ import { useForm } from "react-hook-form";
 import { psychologistService, PsychologistProfileUI } from "@/services/psychologist.service";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
-import { Loader2, Save, X } from "lucide-react";
+import { Loader2, Save, X, ShieldCheck, ShieldAlert, Info, Clock } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ProfileImageUpload";
+import { motion, AnimatePresence } from "framer-motion";
+import { locationService, DepartmentUI, CityUI } from "@/services/location.service";
 
 export default function ProfilePage() {
     const [psychologist, setPsychologist] = useState<PsychologistProfileUI | null>(null);
@@ -16,8 +18,13 @@ export default function ProfilePage() {
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
     const [psychologistId, setPsychologistId] = useState<number | null>(null);
+    const [departments, setDepartments] = useState<DepartmentUI[]>([]);
+    const [cities, setCities] = useState<CityUI[]>([]);
+    const [isLoadingLocations, setIsLoadingLocations] = useState(false);
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<PsychologistProfileUI>();
+    const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<PsychologistProfileUI>();
+
+    const selectedState = watch("state");
 
     useEffect(() => {
         fetchProfile();
@@ -26,6 +33,10 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         setIsLoading(true);
         try {
+            // Load departments first
+            const deps = await locationService.getDepartments();
+            setDepartments(deps);
+
             const storedUser = localStorage.getItem("user");
             if (storedUser) {
                 const user = JSON.parse(storedUser);
@@ -34,6 +45,15 @@ export default function ProfilePage() {
                     setPsychologist(data);
                     setPsychologistId(data.id);
                     reset(data); // Initialize form with data
+
+                    // If has department, load cities
+                    if (data.state) {
+                        const dep = deps.find(d => d.name === data.state);
+                        if (dep) {
+                            const cts = await locationService.getCities(dep.id);
+                            setCities(cts);
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -44,6 +64,22 @@ export default function ProfilePage() {
         }
     };
 
+    // Effect to handle department change
+    useEffect(() => {
+        const updateCities = async () => {
+            if (selectedState && isEditing) {
+                const dep = departments.find(d => d.name === selectedState);
+                if (dep) {
+                    setIsLoadingLocations(true);
+                    const cts = await locationService.getCities(dep.id);
+                    setCities(cts);
+                    setIsLoadingLocations(false);
+                }
+            }
+        };
+        updateCities();
+    }, [selectedState, departments, isEditing]);
+
     const onSubmit = async (data: PsychologistProfileUI) => {
         setIsSaving(true);
         setMessage(null);
@@ -53,9 +89,10 @@ export default function ProfilePage() {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 city: data.city,
+                state: data.state,
                 phoneNumber: data.phone,
                 gender: data.gender,
-                licenseNumber: "MOCK-LICENSE", // Ensure this exists or is editable
+                licenseNumber: psychologist?.licenseNumber || "MOCK-LICENSE",
                 specialization: data.specialization,
                 university: data.university,
                 experienceYears: Number(data.experience),
@@ -123,9 +160,32 @@ export default function ProfilePage() {
             </div>
 
             {message && (
-                <div className={`p-4 mb-6 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    {message.text}
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 mb-6 rounded-2xl flex items-center gap-3 border ${message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}
+                >
+                    {message.type === 'success' ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                    <span className="font-medium">{message.text}</span>
+                </motion.div>
+            )}
+
+            {!psychologist.isVerified && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-8 p-6 bg-amber-50 rounded-3xl border border-amber-100 shadow-sm flex flex-col md:flex-row gap-4 items-center md:items-start"
+                >
+                    <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0 text-amber-600">
+                        <Info className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h3 className="text-amber-900 font-bold mb-1">Perfil en Proceso de Verificación</h3>
+                        <p className="text-amber-800/80 text-sm leading-relaxed">
+                            Nuestro equipo administrativo está revisando tus credenciales y documentos. Una vez verificado tu perfil, aparecerás en los resultados de búsqueda y podrás comenzar a recibir solicitudes de nuevos pacientes.
+                        </p>
+                    </div>
+                </motion.div>
             )}
 
             {isEditing ? (
@@ -146,8 +206,38 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Input label="Nombre" {...register("firstName", { required: "El nombre es requerido" })} error={errors.firstName?.message} />
                                 <Input label="Apellidos" {...register("lastName", { required: "Los apellidos son requeridos" })} error={errors.lastName?.message} />
-                                <Input label="Ciudad de residencia" {...register("city", { required: "La ciudad es requerida" })} error={errors.city?.message} />
+
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Departamento</label>
+                                    <select
+                                        {...register("state", { required: "El departamento es requerido" })}
+                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                    >
+                                        <option value="">Selecciona un departamento</option>
+                                        {departments.map(d => (
+                                            <option key={d.id} value={d.name}>{d.name}</option>
+                                        ))}
+                                    </select>
+                                    {errors.state && <p className="text-xs text-red-500">{errors.state.message}</p>}
+                                </div>
+
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Ciudad</label>
+                                    <select
+                                        {...register("city", { required: "La ciudad es requerida" })}
+                                        disabled={!selectedState || isLoadingLocations}
+                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                                    >
+                                        <option value="">Selecciona una ciudad</option>
+                                        {cities.map(c => (
+                                            <option key={c.id} value={c.name}>{c.name}</option>
+                                        ))}
+                                    </select>
+                                    {errors.city && <p className="text-xs text-red-500">{errors.city.message}</p>}
+                                </div>
+
                                 <Input label="Número de Teléfono" {...register("phone", { required: "El teléfono es requerido" })} error={errors.phone?.message} />
+                                <Input label="Género" {...register("gender", { required: "El género es requerido" })} error={errors.gender?.message} />
                             </div>
                         </div>
                     </div>
@@ -218,9 +308,18 @@ export default function ProfilePage() {
                                     <span key={tag} className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{tag}</span>
                                 ))}
                             </div>
-                            <div className="mt-6 flex justify-center gap-2 flex-wrap">
-                                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium border border-green-200">
-                                    {psychologist.experience} años exp.
+                            <div className="mt-6 flex flex-col items-center gap-3">
+                                {psychologist.isVerified ? (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold border border-emerald-100 uppercase tracking-wider">
+                                        <ShieldCheck className="w-3.5 h-3.5" /> Profesional Verificado
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold border border-amber-100 uppercase tracking-wider">
+                                        <Clock className="w-3.5 h-3.5" /> Verificación Pendiente
+                                    </div>
+                                )}
+                                <span className="px-3 py-1 bg-secondary/10 text-primary rounded-full text-[10px] font-bold border border-glass-border uppercase tracking-wider">
+                                    {psychologist.experience} años de exp.
                                 </span>
                             </div>
                         </div>
@@ -237,6 +336,10 @@ export default function ProfilePage() {
                                 <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                                     <span>Email:</span>
                                     <span className="font-medium text-gray-900">{psychologist.email}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                    <span>Departamento:</span>
+                                    <span className="font-medium text-gray-900">{psychologist.state}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                                     <span>Ciudad:</span>
