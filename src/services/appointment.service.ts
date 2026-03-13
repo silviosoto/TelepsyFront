@@ -1,9 +1,32 @@
 import { fetchClient } from "@/lib/api-client";
 
 export const appointmentService = {
-    async getAppointments() {
+    async getAppointments(filter: any = {}) {
         // Fetch only appointments for the currently logged-in patient
-        return fetchClient('/appointments/my-appointments');
+        const response: any = await fetchClient('/appointments/my-appointments');
+        const rawItems: any[] = response || [];
+
+        let filtered = rawItems;
+
+        // Simple local filtering if filter provided
+        if (filter.status !== undefined) {
+            filtered = filtered.filter(a => a.status === filter.status);
+        } else if (filter.onlyPaid !== false) {
+            // Default: hide Pending (0) appointments unless explicitly told otherwise
+            filtered = filtered.filter(a => a.status !== 0);
+        }
+
+        // Pagination
+        const page = filter.pageNumber || 1;
+        const size = filter.pageSize || 6; // Smaller size for better layout
+        const startIndex = (page - 1) * size;
+        const items = filtered.slice(startIndex, startIndex + size);
+
+        return {
+            items,
+            totalCount: filtered.length,
+            pageSize: size
+        };
     },
 
     async getAppointmentById(id: number) {
@@ -26,6 +49,17 @@ export const appointmentService = {
 
     async getCheckoutSummary(appointmentId: number) {
         return fetchClient(`/appointments/checkout-summary/${appointmentId}`);
+    },
+
+    async rescheduleAppointment(id: number, newDate: string) {
+        return fetchClient(`/appointments/reschedule/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ newDate })
+        });
+    },
+
+    async getAvailableSlots(psychologistId: number, date: string) {
+        return fetchClient(`/appointments/available-slots/${psychologistId}?date=${date}`);
     },
 
     async cancelAppointment(id: number) {
@@ -58,6 +92,10 @@ export const appointmentService = {
         }
         if (filter.status !== undefined) {
             filtered = filtered.filter(a => a.status === filter.status);
+        } else if (filter.onlyPaid) {
+            // Paid means Confirmed (1), Completed (2), or NoShow (4)
+            // Cancelled (3) might also be "paid" depending on policy, but usually we filter out Pending (0)
+            filtered = filtered.filter(a => a.status !== 0);
         }
 
         // Paginate

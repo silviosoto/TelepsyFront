@@ -14,12 +14,17 @@ export function parseApiDate(dateString: string | Date): Date {
     if (!dateString) return new Date();
     if (dateString instanceof Date) return dateString;
 
-    // If it's a string and doesn't contain 'Z' or a timezone offset (+/-) after the time part
-    if (typeof dateString === 'string' &&
-        !dateString.includes('Z') &&
-        !/\d{2}:\d{2}:\d{2}[+-]\d{2}:?\d{2}$/.test(dateString) &&
-        !/\d{2}:\d{2}[+-]\d{2}:?\d{2}$/.test(dateString)) {
-        return new Date(dateString + 'Z');
+    if (typeof dateString === 'string') {
+        // If it already has 'Z' or a +/- offset, parse it normally
+        if (dateString.includes('Z') || /[+-]\d{2}:?\d{2}$/.test(dateString)) {
+            return new Date(dateString);
+        }
+
+        // If it looks like an ISO string but lacks timezone, assume UTC (standard for this API)
+        // This regex checks for the presence of the time separator ':'
+        if (dateString.includes(':')) {
+            return new Date(dateString + 'Z');
+        }
     }
 
     return new Date(dateString);

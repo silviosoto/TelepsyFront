@@ -8,13 +8,15 @@ import {
     User,
     Clock,
     Video,
-    MoreHorizontal,
     CheckCircle2,
     XCircle,
     AlertCircle,
     Star,
     ArrowRight,
-    Info
+    Info,
+    ChevronLeft,
+    ChevronRight,
+    MoreHorizontal as MoreIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { appointmentService } from "@/services/appointment.service";
@@ -38,15 +40,43 @@ export default function AppointmentsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState("all");
 
+    // Pagination States
+    const [pageNumber, setPageNumber] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+
+    // Reschedule/Cancel Modal States
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMode, setModalMode] = useState<'choice' | 'cancel' | 'reschedule'>('choice');
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+    const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
     useEffect(() => {
         fetchAppointments();
-    }, []);
+    }, [filter, pageNumber]);
 
     const fetchAppointments = async () => {
         try {
             setIsLoading(true);
-            const data = await appointmentService.getAppointments();
-            setAppointments(data || []);
+            let statusFilter = undefined;
+            if (filter === "upcoming") statusFilter = 1;
+            else if (filter === "completed") statusFilter = 2;
+            else if (filter === "cancelled") statusFilter = 3;
+
+            const response: any = await appointmentService.getAppointments({
+                pageNumber,
+                pageSize: 6,
+                status: statusFilter,
+                onlyPaid: true
+            });
+
+            setAppointments(response.items || []);
+            setTotalCount(response.totalCount || 0);
+            setTotalPages(Math.ceil((response.totalCount || 0) / (response.pageSize || 6)));
         } catch (error) {
             console.error("Error fetching appointments:", error);
             toast.error("No se pudieron cargar tus citas");
@@ -56,20 +86,79 @@ export default function AppointmentsPage() {
     };
 
     const handleCancel = async (id: number) => {
-        if (!confirm("¿Estás seguro de que deseas cancelar esta cita? Esta acción no se puede deshacer.")) return;
-
         try {
+            setIsProcessing(true);
             await appointmentService.cancelAppointment(id);
             toast.success("Cita cancelada correctamente");
+            setShowModal(false);
             fetchAppointments();
-        } catch (error) {
-            toast.error("No se pudo cancelar la cita");
+        } catch (error: any) {
+            toast.error(error.message || "No se pudo cancelar la cita");
+        } finally {
+            setIsProcessing(false);
         }
     };
 
-    const handleJoinCall = async (id: number) => {
+    const handleReschedule = async () => {
+        if (!selectedAppointment || !selectedSlot) return;
+
         try {
-            const response: any = await appointmentService.joinAppointment(id);
+            setIsProcessing(true);
+            await appointmentService.rescheduleAppointment(selectedAppointment.id, selectedSlot);
+            toast.success("Cita reprogramada correctamente");
+            setShowModal(false);
+            fetchAppointments();
+        } catch (error: any) {
+            toast.error(error.message || "Error al reprogramar la cita");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const fetchSlots = async (date: string) => {
+        if (!selectedAppointment) return;
+        try {
+            setIsLoadingSlots(true);
+            const slots = await appointmentService.getAvailableSlots(selectedAppointment.psychologistId, date);
+            setAvailableSlots(slots || []);
+        } catch (error) {
+            console.error("Error fetching slots:", error);
+            toast.error("Error al cargar horarios disponibles");
+        } finally {
+            setIsLoadingSlots(false);
+        }
+    };
+
+    useEffect(() => {
+        if (rescheduleDate && modalMode === 'reschedule') {
+            fetchSlots(rescheduleDate);
+        }
+    }, [rescheduleDate, modalMode]);
+
+    const openActionModal = (app: Appointment) => {
+        setSelectedAppointment(app);
+        setModalMode('choice');
+        setRescheduleDate("");
+        setAvailableSlots([]);
+        setSelectedSlot(null);
+        setShowModal(true);
+    };
+
+    const maxRescheduleDate = selectedAppointment
+        ? new Date(new Date(selectedAppointment.scheduledTime).setMonth(new Date(selectedAppointment.scheduledTime).getMonth() + 1))
+        : new Date();
+
+    const handleJoinCall = async (appointment: Appointment) => {
+        const scheduledDate = parseApiDate(appointment.scheduledTime);
+        const expirationTime = new Date(scheduledDate.getTime() + 60 * 60 * 1000);
+
+        if (isAfter(new Date(), expirationTime)) {
+            toast.error("La sesión ha expirado. Solo puedes unirte hasta 60 minutos después de la hora programada.");
+            return;
+        }
+
+        try {
+            const response: any = await appointmentService.joinAppointment(appointment.id);
             if (response && response.link) {
                 window.open(response.link, '_blank');
             } else {
@@ -91,18 +180,12 @@ export default function AppointmentsPage() {
                 return { label: "Realizada", color: "bg-blue-500/10 text-blue-600", icon: CheckCircle2 };
             case 3: // Cancelled
                 return { label: "Cancelada", color: "bg-rose-500/10 text-rose-600", icon: XCircle };
-            default: // Pending (awaiting payment usually)
-                return { label: "Pendiente de Pago", color: "bg-amber-500/10 text-amber-600", icon: Clock };
+            default:
+                return { label: "Confirmada", color: "bg-emerald-500/10 text-emerald-600", icon: CheckCircle2 };
         }
     };
 
-    const filteredAppointments = appointments.filter(app => {
-        if (filter === "all") return true;
-        if (filter === "upcoming") return app.status === 1;
-        if (filter === "completed") return app.status === 2;
-        if (filter === "cancelled") return app.status === 3;
-        return true;
-    });
+    const filteredAppointments = appointments; // Already filtered by service
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -115,13 +198,16 @@ export default function AppointmentsPage() {
 
                 <div className="flex bg-white p-1 rounded-2xl border border-glass-border shadow-sm">
                     {[
-                        { id: "all", label: "Todas" },
-                        { id: "upcoming", label: "Próximas" },
-                        { id: "completed", label: "Historial" }
+                        { id: "upcoming", label: "Confirmadas" },
+                        { id: "completed", label: "Realizadas" },
+                        { id: "cancelled", label: "Canceladas" }
                     ].map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => setFilter(tab.id)}
+                            onClick={() => {
+                                setFilter(tab.id);
+                                setPageNumber(1);
+                            }}
                             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filter === tab.id
                                 ? "bg-primary text-white shadow-lg shadow-primary/20"
                                 : "text-foreground/50 hover:text-foreground hover:bg-secondary/5"
@@ -152,7 +238,7 @@ export default function AppointmentsPage() {
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-rose-500"></div>
                     <span className="font-semibold text-foreground/70">Cancelada:</span>
-                    <span className="text-foreground/50">Cita anulada antes de realizarse.</span>
+                    <span className="text-foreground/50">Cita anulada.</span>
                 </div>
             </div>
 
@@ -187,6 +273,10 @@ export default function AppointmentsPage() {
                                 const isUpcoming = app.status === 1 || app.status === 0;
 
                                 const dateObj = parseApiDate(app.scheduledTime);
+                                const now = new Date();
+                                const expirationTime = new Date(dateObj.getTime() + 60 * 60 * 1000);
+                                const isExpired = isAfter(now, expirationTime);
+                                const canJoin = !!app.videoLink && !isExpired && app.status === 1;
 
                                 return (
                                     <motion.div
@@ -248,18 +338,24 @@ export default function AppointmentsPage() {
                                                 {isUpcoming ? (
                                                     <>
                                                         <button
-                                                            onClick={() => handleCancel(app.id)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openActionModal(app);
+                                                            }}
                                                             className="text-xs font-black text-rose-500/40 hover:text-rose-500 transition-colors uppercase tracking-widest px-4"
                                                         >
-                                                            Cancelar
+                                                            Cancelar / Reprogramar
                                                         </button>
                                                         <Button
-                                                            onClick={app.videoLink ? () => handleJoinCall(app.id) : undefined}
-                                                            disabled={!app.videoLink && app.status !== 1}
+                                                            onClick={canJoin ? () => handleJoinCall(app) : undefined}
+                                                            disabled={!canJoin}
                                                             className="rounded-2xl px-6 h-12 shadow-lg shadow-primary/20 group/btn"
+                                                            variant="primary"
                                                         >
-                                                            {app.videoLink ? "Unirse ahora" : "Cita confirmada"}
-                                                            <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                                            <div className="flex items-center gap-2">
+                                                                <Video className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
+                                                                <span>{app.videoLink ? (isExpired ? "Sesión expirada" : "Unirse ahora") : "Cita confirmada"}</span>
+                                                            </div>
                                                         </Button>
                                                     </>
                                                 ) : app.status === 2 ? (
@@ -281,6 +377,42 @@ export default function AppointmentsPage() {
                 )}
             </div>
 
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                    <button
+                        onClick={() => setPageNumber(p => Math.max(1, p - 1))}
+                        disabled={pageNumber === 1}
+                        className="w-10 h-10 rounded-xl border border-glass-border flex items-center justify-center bg-white text-foreground/50 hover:text-primary hover:border-primary/20 disabled:opacity-30 disabled:hover:text-foreground/50 disabled:hover:border-glass-border transition-all"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setPageNumber(i + 1)}
+                                className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${pageNumber === i + 1
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                    : "bg-white border border-glass-border text-foreground/40 hover:text-foreground hover:border-primary/20"
+                                    }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))}
+                        disabled={pageNumber === totalPages}
+                        className="w-10 h-10 rounded-xl border border-glass-border flex items-center justify-center bg-white text-foreground/50 hover:text-primary hover:border-primary/20 disabled:opacity-30 disabled:hover:text-foreground/50 disabled:hover:border-glass-border transition-all"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                </div>
+            )}
+
             {/* Assistance Card */}
             <div className="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="flex items-center gap-6">
@@ -296,6 +428,178 @@ export default function AppointmentsPage() {
                     Contactar soporte
                 </Button>
             </div>
+
+            {/* Reschedule/Cancel Modal */}
+            <AnimatePresence>
+                {showModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !isProcessing && setShowModal(false)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl relative z-10"
+                        >
+                            <div className="p-8 md:p-10">
+                                {modalMode === 'choice' && (
+                                    <div className="space-y-8">
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                                                <MoreIcon className="w-8 h-8 text-primary" />
+                                            </div>
+                                            <h2 className="text-2xl font-black text-foreground mb-2">¿Qué deseas hacer?</h2>
+                                            <p className="text-foreground/50">Selecciona una opción para tu cita con {selectedAppointment?.psychologistName}</p>
+                                        </div>
+
+                                        <div className="grid gap-4">
+                                            <button
+                                                onClick={() => setModalMode('reschedule')}
+                                                className="flex items-center gap-6 p-6 rounded-3xl border-2 border-primary/5 hover:border-primary/20 hover:bg-primary/5 transition-all group text-left"
+                                            >
+                                                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                    <Calendar className="w-6 h-6 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-foreground">Reprogramar cita</h4>
+                                                    <p className="text-xs text-foreground/40 font-medium">Cambiar la fecha y hora por una nueva.</p>
+                                                </div>
+                                            </button>
+
+                                            <button
+                                                onClick={() => setModalMode('cancel')}
+                                                className="flex items-center gap-6 p-6 rounded-3xl border-2 border-rose-500/5 hover:border-rose-500/20 hover:bg-rose-500/5 transition-all group text-left"
+                                            >
+                                                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                    <XCircle className="w-6 h-6 text-rose-500" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-rose-500">Cancelar definitivamente</h4>
+                                                    <p className="text-xs text-rose-500/40 font-medium">Anular la sesión actual.</p>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {modalMode === 'cancel' && (
+                                    <div className="space-y-8">
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 bg-rose-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                                                <AlertCircle className="w-8 h-8 text-rose-500" />
+                                            </div>
+                                            <h2 className="text-2xl font-black text-foreground mb-2">¿Estás seguro?</h2>
+                                            <p className="text-foreground/50">Esta acción cancelará tu cita de forma permanente y no podrá deshacerse.</p>
+                                        </div>
+
+                                        <div className="flex gap-4">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setModalMode('choice')}
+                                                disabled={isProcessing}
+                                                className="flex-1 rounded-2xl h-14"
+                                            >
+                                                Volver
+                                            </Button>
+                                            <Button
+                                                variant="primary"
+                                                onClick={() => selectedAppointment && handleCancel(selectedAppointment.id)}
+                                                isLoading={isProcessing}
+                                                className="flex-1 rounded-2xl h-14 bg-rose-500 hover:bg-rose-600 border-none"
+                                            >
+                                                Sí, cancelar
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {modalMode === 'reschedule' && (
+                                    <div className="space-y-6">
+                                        <div className="text-center">
+                                            <h2 className="text-2xl font-black text-foreground mb-2">Reprogramar Cita</h2>
+                                            <p className="text-foreground/50 text-sm">
+                                                Máximo permitido hasta: <span className="font-bold text-primary">{format(maxRescheduleDate, "dd 'de' MMMM", { locale: es })}</span>
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-xs font-black uppercase tracking-widest text-foreground/40 mb-2 block">Selecciona nueva fecha</label>
+                                                <input
+                                                    type="date"
+                                                    value={rescheduleDate}
+                                                    min={new Date().toISOString().split('T')[0]}
+                                                    max={maxRescheduleDate.toISOString().split('T')[0]}
+                                                    onChange={(e) => setRescheduleDate(e.target.value)}
+                                                    className="w-full p-4 rounded-2xl border border-glass-border bg-secondary/5 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                                />
+                                            </div>
+
+                                            {rescheduleDate && (
+                                                <div className="animate-in fade-in slide-in-from-top-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-foreground/40 mb-2 block">Horarios disponibles</label>
+                                                    {isLoadingSlots ? (
+                                                        <div className="flex items-center justify-center p-8">
+                                                            <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                                        </div>
+                                                    ) : availableSlots.length > 0 ? (
+                                                        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20">
+                                                            {availableSlots.map((slot: any) => {
+                                                                const isSelected = selectedSlot === slot.startTime;
+                                                                return (
+                                                                    <button
+                                                                        key={slot.startTime}
+                                                                        onClick={() => setSelectedSlot(slot.startTime)}
+                                                                        className={`p-3 rounded-xl text-xs font-bold transition-all ${isSelected
+                                                                            ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                                                            : "bg-secondary/5 text-foreground/60 hover:bg-secondary/10 border border-transparent"
+                                                                            }`}
+                                                                    >
+                                                                        {format(parseApiDate(slot.startTime), "HH:mm")}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-center">
+                                                            <p className="text-xs text-amber-600 font-bold">No hay horarios para este día</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex gap-4 pt-4">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setModalMode('choice')}
+                                                disabled={isProcessing}
+                                                className="flex-1 rounded-2xl h-14"
+                                            >
+                                                Volver
+                                            </Button>
+                                            <Button
+                                                variant="primary"
+                                                onClick={handleReschedule}
+                                                disabled={!selectedSlot}
+                                                isLoading={isProcessing}
+                                                className="flex-1 rounded-2xl h-14"
+                                            >
+                                                Confirmar nueva fecha
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

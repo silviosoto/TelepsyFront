@@ -204,11 +204,27 @@ export default function ProfilePage() {
                         <div className="flex-grow w-full space-y-4">
                             <h3 className="text-lg font-semibold text-primary mb-4">Información Personal</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Input label="Nombre" {...register("firstName", { required: "El nombre es requerido" })} error={errors.firstName?.message} />
-                                <Input label="Apellidos" {...register("lastName", { required: "Los apellidos son requeridos" })} error={errors.lastName?.message} />
+                                <Input
+                                    label="Nombre *"
+                                    {...register("firstName", {
+                                        required: "El nombre es requerido",
+                                        minLength: { value: 2, message: "El nombre debe tener al menos 2 caracteres" },
+                                        pattern: { value: /^[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+$/, message: "El nombre solo puede contener letras" }
+                                    })}
+                                    error={errors.firstName?.message}
+                                />
+                                <Input
+                                    label="Apellidos *"
+                                    {...register("lastName", {
+                                        required: "Los apellidos son requeridos",
+                                        minLength: { value: 2, message: "Los apellidos deben tener al menos 2 caracteres" },
+                                        pattern: { value: /^[A-Za-zÁéíóúÁÉÍÓÚñÑ ]+$/, message: "Los apellidos solo pueden contener letras" }
+                                    })}
+                                    error={errors.lastName?.message}
+                                />
 
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Departamento</label>
+                                    <label className="text-sm font-medium text-gray-700">Departamento *</label>
                                     <select
                                         {...register("state", { required: "El departamento es requerido" })}
                                         className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
@@ -222,7 +238,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Ciudad</label>
+                                    <label className="text-sm font-medium text-gray-700">Ciudad *</label>
                                     <select
                                         {...register("city", { required: "La ciudad es requerida" })}
                                         disabled={!selectedState || isLoadingLocations}
@@ -236,8 +252,36 @@ export default function ProfilePage() {
                                     {errors.city && <p className="text-xs text-red-500">{errors.city.message}</p>}
                                 </div>
 
-                                <Input label="Número de Teléfono" {...register("phone", { required: "El teléfono es requerido" })} error={errors.phone?.message} />
-                                <Input label="Género" {...register("gender", { required: "El género es requerido" })} error={errors.gender?.message} />
+                                <Input
+                                    label="Número de Teléfono *"
+                                    {...register("phone", {
+                                        required: "El teléfono es requerido",
+                                        pattern: {
+                                            value: /^(\+57|57)?(3[0-9]{9}|[1-9][0-9]{6})$/,
+                                            message: "Ingresa un número de teléfono válido (ej: 3001234567)"
+                                        }
+                                    })}
+                                    error={errors.phone?.message}
+                                />
+                                <Input
+                                    label="Correo Electrónico"
+                                    value={psychologist.email}
+                                    disabled
+                                    className="bg-gray-50 cursor-not-allowed"
+                                    title="El correo está vinculado a tu cuenta y no se puede cambiar desde aquí."
+                                />
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Género *</label>
+                                    <select
+                                        {...register("gender", { required: "El género es requerido" })}
+                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                    >
+                                        <option value="">Selecciona...</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Femenino">Femenino</option>
+                                    </select>
+                                    {errors.gender && <p className="text-xs text-red-500">{errors.gender.message}</p>}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -246,8 +290,21 @@ export default function ProfilePage() {
                     <div className="space-y-4 pb-8 border-b border-glass-border">
                         <h3 className="text-lg font-semibold text-primary">Información Profesional</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="Universidad de Egreso" {...register("university")} />
-                            <Input label="Años de Experiencia Clínica" type="number" {...register("experience")} />
+                            <Input
+                                label="Universidad de Egreso *"
+                                {...register("university", { required: "La universidad es requerida" })}
+                                error={errors.university?.message}
+                            />
+                            <Input
+                                label="Años de Experiencia Clínica *"
+                                type="number"
+                                {...register("experience", {
+                                    required: "Los años de experiencia son requeridos",
+                                    min: { value: 0, message: "La experiencia no puede ser negativa" },
+                                    max: { value: 60, message: "Ingresa un valor válido" }
+                                })}
+                                error={errors.experience?.message}
+                            />
                         </div>
                     </div>
 
@@ -260,13 +317,17 @@ export default function ProfilePage() {
 
                         <div className="grid grid-cols-1 gap-6">
                             <div className="flex flex-col gap-2">
-                                <label className="text-sm font-medium text-gray-700">Biografía Profesional</label>
+                                <label className="text-sm font-medium text-gray-700">Biografía Profesional *</label>
                                 <textarea
-                                    {...register("bio")}
+                                    {...register("bio", {
+                                        required: "La biografía es requerida",
+                                        minLength: { value: 50, message: "La biografía debe tener al menos 50 caracteres para ser profesional" }
+                                    })}
                                     rows={5}
                                     placeholder="Cuéntale a tus futuros pacientes acerca de tu enfoque, tus especialidades y cómo puedes ayudarles..."
-                                    className="w-full rounded-xl border border-input bg-transparent px-4 py-3 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent"
+                                    className={`w-full rounded-xl border ${errors.bio ? 'border-red-500' : 'border-input'} bg-transparent px-4 py-3 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent`}
                                 />
+                                {errors.bio && <p className="text-xs text-red-500 ml-1">{errors.bio.message}</p>}
                             </div>
 
                             <div className="flex flex-col gap-2">

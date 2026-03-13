@@ -33,10 +33,10 @@ export default function AppointmentsPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
 
-    // Filters
     const [patientName, setPatientName] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [statusFilter, setStatusFilter] = useState<number | undefined>(1); // Default to Confirmed
 
     const fetchPsychologistId = async () => {
         try {
@@ -67,18 +67,20 @@ export default function AppointmentsPage() {
                 startDate: startDate || undefined,
                 endDate: endDate || undefined,
                 pageNumber,
-                pageSize: 10
+                pageSize: 10,
+                status: statusFilter,
+                onlyPaid: true
             };
 
             const result: any = await appointmentService.getPsychologistAppointments(filter);
-            // Assuming API returns { items: [], totalCount: 0, totalPages: 0 } or similar wrapper
-            // Adjust based on actual API response structure (PaginatedResult)
             if (result && result.items) {
                 setAppointments(result.items);
                 setTotalCount(result.totalCount);
                 setTotalPages(Math.ceil(result.totalCount / result.pageSize));
             } else {
                 setAppointments([]);
+                setTotalCount(0);
+                setTotalPages(1);
             }
         } catch (error) {
             console.error("Error fetching appointments:", error);
@@ -113,7 +115,7 @@ export default function AppointmentsPage() {
             }
         };
         init();
-    }, [pageNumber]); // Fetch when page changes
+    }, [pageNumber, statusFilter]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,44 +127,17 @@ export default function AppointmentsPage() {
         setPatientName("");
         setStartDate("");
         setEndDate("");
+        setStatusFilter(1);
         setPageNumber(1);
-        // We need to wait for state updates to apply before fetching, 
-        // the easiest way is to push the fetch to the end of the event loop, 
-        // or just rely on an effect if we added them to the dependency array.
-        // For simplicity, we just trigger fetch with empty values manually right now:
-        if (!psychologistId) return;
-
-        const filter = {
-            psychologistId: psychologistId,
-            patientName: undefined,
-            startDate: undefined,
-            endDate: undefined,
-            pageNumber: 1,
-            pageSize: 10
-        };
-
-        setLoading(true);
-        appointmentService.getPsychologistAppointments(filter).then((result: any) => {
-            if (result && result.items) {
-                setAppointments(result.items);
-                setTotalCount(result.totalCount);
-                setTotalPages(Math.ceil(result.totalCount / result.pageSize));
-            } else {
-                setAppointments([]);
-            }
-            setLoading(false);
-        }).catch(err => {
-            console.error(err);
-            setLoading(false);
-        });
+        fetchAppointments(); // Fetch appointments with cleared filters
     };
 
     const getStatusBadge = (status: number) => {
         switch (status) {
-            case 0: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
             case 1: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Confirmada</span>;
             case 2: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completada</span>;
             case 3: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelada</span>;
+            case 4: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">No Asistió</span>;
             default: return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Desconocido</span>;
         }
     };
@@ -178,9 +153,17 @@ export default function AppointmentsPage() {
         });
     };
 
-    const handleJoinCall = async (id: number) => {
+    const handleJoinCall = async (appointmentId: number, scheduledTime: string) => {
+        const scheduledDate = parseApiDate(scheduledTime);
+        const expirationTime = new Date(scheduledDate.getTime() + 60 * 60 * 1000);
+
+        if (new Date() > expirationTime) {
+            alert("La sesión ha expirado (más de 60 minutos desde la hora programada).");
+            return;
+        }
+
         try {
-            const response: any = await appointmentService.joinAppointment(id);
+            const response: any = await appointmentService.joinAppointment(appointmentId);
             if (response && response.link) {
                 window.open(response.link, '_blank');
             } else {
@@ -201,6 +184,29 @@ export default function AppointmentsPage() {
                 <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border shadow-sm">
                     <span className="text-sm font-medium text-gray-600">Total: {totalCount} citas</span>
                 </div>
+            </div>
+
+            <div className="flex bg-white p-1 rounded-2xl border border-glass-border shadow-sm w-fit">
+                {[
+                    { id: 1, label: "Confirmadas" },
+                    { id: 2, label: "Realizadas" },
+                    { id: 3, label: "Canceladas" },
+                    { id: 4, label: "No Asistió" }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => {
+                            setStatusFilter(tab.id);
+                            setPageNumber(1);
+                        }}
+                        className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${statusFilter === tab.id
+                            ? "bg-primary text-white shadow-lg shadow-primary/20"
+                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {/* Filters Bar */}
@@ -278,19 +284,21 @@ export default function AppointmentsPage() {
                                                 <Clock className="h-3.5 w-3.5" />
                                                 <span>{parseApiDate(appointment.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
-                                            <span className="text-gray-300">|</span>
-                                            <span>{appointment.durationMinutes} min</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 w-full md:w-auto mt-4 md:mt-0 justify-between md:justify-end">
-                                    {getStatusBadge(appointment.status)}
+
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <div className="flex items-center gap-4 border-l md:border-l-0 md:border-r border-gray-100 pr-6 mr-2">
+                                        {getStatusBadge(appointment.status)}
+                                    </div>
+
                                     {appointment.status === 1 && (
-                                        <div className="flex flex-col sm:flex-row gap-2">
+                                        <div className="flex gap-3">
                                             <Button
                                                 variant="primary"
-                                                onClick={() => handleJoinCall(appointment.id)}
-                                                className="text-xs h-8 px-4 font-semibold"
+                                                onClick={() => handleJoinCall(appointment.id, appointment.scheduledTime)}
+                                                className="text-xs h-8 px-4"
                                             >
                                                 Unirse a Llamada
                                             </Button>

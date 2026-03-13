@@ -101,16 +101,28 @@ export const psychologistService = {
         return tags;
     },
 
+    async getProductivityReport(id: number, startDate?: string, endDate?: string) {
+        let url = `/psychologist/${id}/productivity-report`;
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        const queryString = params.toString();
+        if (queryString) url += `?${queryString}`;
+
+        return fetchClient(url);
+    },
+
     mapProfileToUI(psy: any): PsychologistProfileUI {
         return {
             ...this.mapToUI([psy])[0],
-            bio: psy.bio || 'Especialista comprometido con el bienestar emocional de sus pacientes.',
-            university: psy.university || 'Universidad Nacional',
-            hobbies: psy.hobbies || 'Lectura, Investigación',
-            email: psy.person?.email || 'contacto@telepsy.com',
-            phone: psy.person?.phoneNumber || 'Confidencial',
-            state: psy.person?.state || 'Sin departamento',
-            licenseNumber: psy.licenseNumber || 'Pendiente'
+            bio: psy.bio || '',
+            university: psy.university || '',
+            hobbies: psy.hobbies || '',
+            email: psy.person?.user?.email || psy.person?.email || '',
+            phone: psy.person?.phoneNumber || '',
+            state: psy.person?.state || '',
+            licenseNumber: psy.licenseNumber || ''
         };
     },
 

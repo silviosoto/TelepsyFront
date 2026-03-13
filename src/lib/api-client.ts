@@ -24,13 +24,18 @@ export async function fetchClient<T = any>(endpoint: string, options: RequestOpt
         }
     }
 
+    const urlWithCacheBust = endpoint.includes('?')
+        ? `${endpoint}&_t=${Date.now()}`
+        : `${endpoint}?_t=${Date.now()}`;
+
     const config: RequestInit = {
         ...options,
         headers,
+        cache: 'no-store' // Force fresh data for dynamic requests
     };
 
     try {
-        const response = await fetch(`${API_URL}${endpoint}`, config);
+        const response = await fetch(`${API_URL}${urlWithCacheBust}`, config);
 
         if (!response.ok) {
             const errorBody = await response.json().catch(() => ({}));
