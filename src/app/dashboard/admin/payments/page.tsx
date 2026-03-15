@@ -33,6 +33,8 @@ interface PaymentItem {
     psychologistShare: number;
     platformCommission: number;
     isPaidToPsychologist: boolean;
+    patientAttended: boolean;
+    psychologistAttended: boolean;
     appointmentId: number;
 }
 
@@ -45,14 +47,43 @@ export default function AdminPaymentsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPayout, setSelectedPayout] = useState<{ psychId: number, apptId: number } | null>(null);
 
+    // List sources for filters
+    const [psychologists, setPsychologists] = useState<{ id: number, fullName: string }[]>([]);
+    const [patients, setPatients] = useState<{ id: number, fullName: string }[]>([]);
+
     // Filter state
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [selectedPsychologistId, setSelectedPsychologistId] = useState<string>("all");
+    const [selectedPatientId, setSelectedPatientId] = useState<string>("all");
+
+    const fetchFiltersData = async () => {
+        try {
+            const [psyData, patData] = await Promise.all([
+                adminService.getPsychologists(1, 1000),
+                adminService.getPatients(1, 1000)
+            ]);
+            if (psyData?.data) setPsychologists(psyData.data);
+            if (patData?.data) setPatients(patData.data);
+        } catch (error) {
+            console.error("Error fetching filter options:", error);
+        }
+    };
 
     const fetchPayments = async () => {
         setIsLoading(true);
         try {
-            const data = await adminService.getPaymentManagement();
+            const psychId = selectedPsychologistId === "all" ? undefined : parseInt(selectedPsychologistId);
+            const patientId = selectedPatientId === "all" ? undefined : parseInt(selectedPatientId);
+
+            const data = await adminService.getPaymentManagement(
+                psychId,
+                patientId,
+                startDate || undefined,
+                endDate || undefined
+            );
             if (Array.isArray(data)) {
                 setPayments(data);
             }
@@ -65,8 +96,12 @@ export default function AdminPaymentsPage() {
     };
 
     useEffect(() => {
-        fetchPayments();
+        fetchFiltersData();
     }, []);
+
+    useEffect(() => {
+        fetchPayments();
+    }, [selectedPsychologistId, selectedPatientId, startDate, endDate]);
 
     const handleProcessPayout = (psychologistId: number, appointmentId: number) => {
         setSelectedPayout({ psychId: psychologistId, apptId: appointmentId });
@@ -128,29 +163,98 @@ export default function AdminPaymentsPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-glass-border flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 z-10" />
-                    <Input
-                        placeholder="Buscar por psicólogo, paciente o factura..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-12 w-full"
-                    />
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-glass-border space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/50 uppercase ml-1">Psicólogo</label>
+                        <select
+                            value={selectedPsychologistId}
+                            onChange={(e) => setSelectedPsychologistId(e.target.value)}
+                            className="w-full bg-secondary/5 border border-glass-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                        >
+                            <option value="all">Todos los Psicólogos</option>
+                            {psychologists.filter(p => p.fullName).map(p => (
+                                <option key={p.id} value={p.id}>{p.fullName}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/50 uppercase ml-1">Paciente</label>
+                        <select
+                            value={selectedPatientId}
+                            onChange={(e) => setSelectedPatientId(e.target.value)}
+                            className="w-full bg-secondary/5 border border-glass-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                        >
+                            <option value="all">Todos los Pacientes</option>
+                            {patients.filter(p => p.fullName).map(p => (
+                                <option key={p.id} value={p.id}>{p.fullName}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/50 uppercase ml-1">Fecha Inicio</label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30 pointer-events-none" />
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-secondary/5 border border-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/50 uppercase ml-1">Fecha Fin</label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30 pointer-events-none" />
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-secondary/5 border border-glass-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="bg-secondary/5 border border-glass-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="pending">Pendientes de Pago</option>
-                        <option value="paid">Pagados al Psicólogo</option>
-                    </select>
-                    <Button variant="outline" onClick={() => { setSearchTerm(""); setStatusFilter("all"); }} className="px-6">
-                        <RefreshCw className="w-4 h-4 mr-2" /> Limpiar
-                    </Button>
+
+                <div className="flex flex-col md:flex-row gap-4 pt-2 border-t border-glass-border/30">
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 z-10" />
+                        <Input
+                            placeholder="Filtrar resultados actuales..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-12 w-full h-11"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            className="bg-secondary/5 border border-glass-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium"
+                        >
+                            <option value="all">Todos los estados</option>
+                            <option value="pending">Pendientes de Pago</option>
+                            <option value="paid">Pagados al Psicólogo</option>
+                        </select>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setSearchTerm("");
+                                setStatusFilter("all");
+                                setStartDate("");
+                                setEndDate("");
+                                setSelectedPsychologistId("all");
+                                setSelectedPatientId("all");
+                            }}
+                            className="px-6 h-11 rounded-xl"
+                        >
+                            <RefreshCw className="w-4 h-4 mr-2" /> Limpiar Filtros
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -167,6 +271,7 @@ export default function AdminPaymentsPage() {
                                 <th className="p-4 font-semibold uppercase tracking-wider text-right">Total</th>
                                 <th className="p-4 font-semibold uppercase tracking-wider text-right">Comisión</th>
                                 <th className="p-4 font-semibold uppercase tracking-wider text-right text-primary">A Pagar</th>
+                                <th className="p-4 font-semibold uppercase tracking-wider">Asistencia</th>
                                 <th className="p-4 font-semibold uppercase tracking-wider">Estado</th>
                                 <th className="p-4 font-semibold uppercase tracking-wider">Acción</th>
                             </tr>
@@ -226,6 +331,16 @@ export default function AdminPaymentsPage() {
                                             {formatCurrency(payment.psychologistShare)}
                                         </td>
                                         <td className="p-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${payment.patientAttended ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    Pac: {payment.patientAttended ? 'Sí' : 'No'}
+                                                </span>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${payment.psychologistAttended ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    Psi: {payment.psychologistAttended ? 'Sí' : 'No'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
                                             {payment.isPaidToPsychologist ? (
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
                                                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -243,7 +358,7 @@ export default function AdminPaymentsPage() {
                                                 <Button
                                                     size="sm"
                                                     onClick={() => handleProcessPayout(payment.psychologistId, payment.appointmentId)}
-                                                    disabled={isProcessing === payment.appointmentId}
+                                                    disabled={isProcessing === payment.appointmentId || !payment.psychologistAttended}
                                                     className="h-9 px-4 rounded-xl shadow-lg shadow-primary/20"
                                                 >
                                                     {isProcessing === payment.appointmentId ? (

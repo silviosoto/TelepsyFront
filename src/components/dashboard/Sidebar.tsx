@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Calendar, Users, LogOut, Settings, Briefcase, Clock, Tag } from "lucide-react";
+import { User, Calendar, Users, LogOut, Settings, Briefcase, Clock, Tag, BarChart3 } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
@@ -14,6 +14,7 @@ const navItems = [
     { name: "Mi Agenda", href: "/dashboard/psychologist/agenda", icon: Clock },
     { name: "Mis Citas", href: "/dashboard/psychologist/appointments", icon: Calendar },
     { name: "Mis Pacientes", href: "/dashboard/psychologist/patients", icon: Users },
+    { name: "Mi Producción", href: "/dashboard/psychologist/reports", icon: BarChart3 },
 ];
 
 export function Sidebar() {

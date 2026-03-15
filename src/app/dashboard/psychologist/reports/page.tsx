@@ -29,6 +29,8 @@ interface ProductivityItem {
     commission: number;
     netAmount: number;
     status: string;
+    patientAttended: boolean;
+    psychologistAttended: boolean;
 }
 
 interface ReportData {
@@ -163,43 +165,43 @@ export default function ReportsPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-2xl border border-glass-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <Users className="w-16 h-16 text-primary" />
+                <div className="bg-white p-6 rounded-2xl border border-glass-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all relative overflow-hidden group bg-gradient-to-br from-white to-primary/5">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                        <Users className="w-16 h-16 text-primary scale-125 rotate-12" />
                     </div>
                     <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Sesiones</p>
                     <h3 className="text-3xl font-black text-gray-900 mt-2">{report?.totalSessions || 0}</h3>
-                    <div className="mt-4 flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-full">
+                    <div className="mt-4 flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 w-fit px-3 py-1 rounded-full border border-emerald-100">
                         <TrendingUp className="w-3 h-3 mr-1" /> Actividad Confirmada
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-glass-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <DollarSign className="w-16 h-16 text-blue-600" />
+                <div className="bg-white p-6 rounded-2xl border border-glass-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all relative overflow-hidden group bg-gradient-to-br from-white to-blue-500/5">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                        <DollarSign className="w-16 h-16 text-blue-600 scale-125 -rotate-12" />
                     </div>
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Ingreso Bruto</p>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Producción Bruta</p>
                     <h3 className="text-3xl font-black text-gray-900 mt-2">{formatCurrency(report?.totalGross || 0)}</h3>
-                    <div className="mt-4 text-xs text-gray-400">Total facturado a pacientes</div>
+                    <div className="mt-4 text-xs font-medium text-gray-400">Total pacientes</div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-glass-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <ArrowDownRight className="w-16 h-16 text-amber-600" />
+                <div className="bg-white p-6 rounded-2xl border border-glass-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all relative overflow-hidden group bg-gradient-to-br from-white to-amber-500/5">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                        <ArrowDownRight className="w-16 h-16 text-amber-600 scale-125 rotate-12" />
                     </div>
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Comisión (30%)</p>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Comisión Plataforma</p>
                     <h3 className="text-3xl font-black text-amber-600 mt-2">-{formatCurrency(report?.totalCommission || 0)}</h3>
-                    <div className="mt-4 text-xs text-gray-400">Uso de plataforma y soporte</div>
+                    <div className="mt-4 text-xs font-medium text-gray-400">Servicios MindCare (30%)</div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-primary/20 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group ring-1 ring-primary/10">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <Wallet className="w-16 h-16 text-primary" />
+                <div className="bg-white p-6 rounded-2xl border-2 border-primary/20 shadow-lg shadow-primary/5 hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden group bg-gradient-to-br from-white to-primary/10">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <Wallet className="w-16 h-16 text-primary scale-125 -rotate-12" />
                     </div>
-                    <p className="text-sm font-semibold text-primary uppercase tracking-wider">Pago Neto Estimado</p>
+                    <p className="text-sm font-semibold text-primary uppercase tracking-wider">Tu Pago Neto</p>
                     <h3 className="text-3xl font-black text-primary mt-2">{formatCurrency(report?.totalNet || 0)}</h3>
-                    <div className="mt-4 flex items-center text-xs font-bold text-primary bg-primary/10 w-fit px-2 py-1 rounded-full">
-                        <ArrowUpRight className="w-3 h-3 mr-1" /> Disponible para retiro
+                    <div className="mt-4 flex items-center text-xs font-bold text-white bg-primary w-fit px-3 py-1 rounded-full shadow-lg shadow-primary/30">
+                        <ArrowUpRight className="w-3 h-3 mr-1" /> Disponible
                     </div>
                 </div>
             </div>
@@ -219,6 +221,7 @@ export default function ReportsPage() {
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Bruto</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Comisión</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Neto</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Asistencia</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Estado</th>
                             </tr>
                         </thead>
@@ -258,6 +261,16 @@ export default function ReportsPage() {
                                         </td>
                                         <td className="px-6 py-4 text-sm font-bold text-primary text-right">
                                             {formatCurrency(item.netAmount)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${item.patientAttended ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    Pac: {item.patientAttended ? 'Sí' : 'No'}
+                                                </span>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${item.psychologistAttended ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    Tú: {item.psychologistAttended ? 'Sí' : 'No'}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${item.status === 'Completed' || item.status === '2' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :

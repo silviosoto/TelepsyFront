@@ -66,8 +66,14 @@ export const adminService = {
         });
     },
 
-    async getPaymentManagement() {
-        return fetchClient(`/Admin/payments`);
+    async getPaymentManagement(psychologistId?: number, patientId?: number, startDate?: string, endDate?: string) {
+        const queryParams = new URLSearchParams();
+        if (psychologistId) queryParams.append('psychologistId', psychologistId.toString());
+        if (patientId) queryParams.append('patientId', patientId.toString());
+        if (startDate) queryParams.append('startDate', startDate);
+        if (endDate) queryParams.append('endDate', endDate);
+
+        return fetchClient(`/Admin/payments?${queryParams.toString()}`);
     },
 
     async processPayout(payoutRequest: { psychologistId: number, appointmentIds: number[] }) {
