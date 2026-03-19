@@ -74,36 +74,37 @@ export const Hero = () => {
                     <Card className="relative z-10 overflow-hidden border-white/40 shadow-2xl">
                         <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/20 z-0" />
                         <div className="relative z-10 p-6 flex flex-col gap-6">
-                            {/* Mock Chat Interface */}
-                            <div className="flex items-center gap-4 border-b border-glass-border pb-4">
-                                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                                    <span className="font-bold text-primary">Dr</span>
-                                </div>
-                                <div>
-                                    <div className="font-medium">Dra. Ana García</div>
-                                    <div className="text-xs text-foreground/50">Psicóloga Clínica • En línea</div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="bg-white/50 p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start">
-                                    <p className="text-sm">Hola, ¿cómo te has sentido esta semana?</p>
-                                </div>
-                                <div className="bg-primary text-white p-3 rounded-2xl rounded-tr-none max-w-[80%] ml-auto shadow-md">
-                                    <p className="text-sm">Me he sentido un poco ansioso por el trabajo, pero mejor que antes.</p>
-                                </div>
-                                <div className="bg-white/50 p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start">
-                                    <p className="text-sm">Es normal sentirse así. Vamos a trabajar en algunas herramientas para manejarlo.</p>
+                            {/* Online Therapy Image */}
+                            <div className="relative aspect-video rounded-xl overflow-hidden border border-white/20 shadow-lg">
+                                <img
+                                    src="/images/online-therapy.png"
+                                    alt="Sesión de terapia online"
+                                    className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-bottom p-4">
+                                     <div className="mt-auto">
+                                        <div className="flex items-center gap-2 text-white/90 text-sm font-medium">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                            Sesión en vivo
+                                        </div>
+                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-4 pt-4 border-t border-glass-border flex justify-between items-center text-xs text-foreground/40">
-                                <div className="flex gap-2">
-                                    <Smartphone className="w-4 h-4" />
-                                    <Tablet className="w-4 h-4" />
-                                    <Monitor className="w-4 h-4" />
+                            <div className="mt-2 flex justify-between items-center text-xs text-foreground/50">
+                                <div className="flex gap-3">
+                                    <div className="flex items-center gap-1.5 font-medium text-foreground/60 transition-colors hover:text-primary">
+                                        <Smartphone className="w-3.5 h-3.5" />
+                                        <span>Móvil</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 font-medium text-foreground/60 transition-colors hover:text-primary">
+                                        <Monitor className="w-3.5 h-3.5" />
+                                        <span>Escritorio</span>
+                                    </div>
                                 </div>
-                                <span>Videollamada segura end-to-end</span>
+                                <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
+                                    Conexión Segura
+                                </div>
                             </div>
                         </div>
                     </Card>
