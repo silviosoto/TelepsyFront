@@ -31,7 +31,7 @@ export const Features = () => {
         <section id="features" className="py-20 bg-background">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold text-foreground mb-4">¿Por qué elegir Mindcare?</h2>
+                    <h2 className="text-3xl font-bold text-foreground mb-4">¿Por qué elegir Salumia?</h2>
                     <p className="text-foreground/70">Reinventamos la experiencia de ir al psicólogo.</p>
                 </div>
 

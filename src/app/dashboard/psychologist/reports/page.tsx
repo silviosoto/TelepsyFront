@@ -191,7 +191,7 @@ export default function ReportsPage() {
                     </div>
                     <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Comisión Plataforma</p>
                     <h3 className="text-3xl font-black text-amber-600 mt-2">-{formatCurrency(report?.totalCommission || 0)}</h3>
-                    <div className="mt-4 text-xs font-medium text-gray-400">Servicios MindCare (30%)</div>
+                    <div className="mt-4 text-xs font-medium text-gray-400">Servicios Salumia (30%)</div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border-2 border-primary/20 shadow-lg shadow-primary/5 hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden group bg-gradient-to-br from-white to-primary/10">

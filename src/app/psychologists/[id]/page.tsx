@@ -18,7 +18,7 @@ export async function generateMetadata(
         
         if (!psychologist) {
             return {
-                title: "Psicólogo no encontrado | Mindcare",
+                title: "Psicólogo no encontrado | Salumia",
             };
         }
 
@@ -26,17 +26,17 @@ export async function generateMetadata(
         const description = `${fullName} es un psicólogo especialista en ${psychologist.specialization} con ${psychologist.experience} años de experiencia en ${psychologist.city}. Agenda tu cita online.`;
 
         return {
-            title: `Ps. ${fullName} | ${psychologist.specialization} | Mindcare`,
+            title: `Ps. ${fullName} | ${psychologist.specialization} | Salumia`,
             description,
             openGraph: {
-                title: `Perfil de ${fullName} - Psicólogo Verificado | Mindcare`,
+                title: `Perfil de ${fullName} - Psicólogo Verificado | Salumia`,
                 description,
                 images: psychologist.profilePicture ? [psychologist.profilePicture] : [],
             },
         };
     } catch (error) {
         return {
-            title: "Expertos en Salud Mental | Mindcare",
+            title: "Expertos en Salud Mental | Salumia",
         };
     }
 }

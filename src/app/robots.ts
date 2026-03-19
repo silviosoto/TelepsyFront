@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/dashboard/',
     },
-    sitemap: 'https://mindcare.com.co/sitemap.xml',
+    sitemap: 'https://salumia.com.co/sitemap.xml',
   }
 }
