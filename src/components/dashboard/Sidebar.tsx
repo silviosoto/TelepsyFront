@@ -6,6 +6,7 @@ import { User, Calendar, Users, LogOut, Settings, Briefcase, Clock, Tag, BarChar
 import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
+import { X } from "lucide-react";
 
 const navItems = [
     { name: "Mi Perfil", href: "/dashboard/psychologist/profile", icon: User },
@@ -17,47 +18,64 @@ const navItems = [
     { name: "Mi Producción", href: "/dashboard/psychologist/reports", icon: BarChart3 },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
 
     return (
-        <aside className="w-64 bg-white border-r border-glass-border hidden md:flex flex-col fixed h-full z-20">
-            <div className="p-6 border-b border-glass-border">
-                <div className="flex items-center gap-2">
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+                    onClick={onClose}
+                />
+            )}
+
+            <aside className={`w-64 bg-white border-r border-glass-border flex flex-col fixed h-full z-40 transition-transform duration-300 md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
+                }`}>
+                <div className="p-6 border-b border-glass-border flex items-center justify-between">
                     <Logo />
+                    <button className="md:hidden p-2 text-foreground/50 hover:text-foreground" onClick={onClose}>
+                        <X className="w-6 h-6" />
+                    </button>
                 </div>
-            </div>
 
-            <nav className="flex-1 p-4 space-y-2">
-                {navItems.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
-                    return (
-                        <Link key={item.href} href={item.href}>
-                            <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                                ? "bg-primary/10 text-primary font-medium"
-                                : "text-foreground/70 hover:bg-secondary/10 hover:text-foreground"
-                                }`}>
-                                <item.icon className="w-5 h-5" />
-                                {item.name}
-                            </div>
-                        </Link>
-                    );
-                })}
-            </nav>
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                    {navItems.map((item) => {
+                        const isActive = pathname.startsWith(item.href);
+                        return (
+                            <Link key={item.href} href={item.href} onClick={onClose}>
+                                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
+                                    ? "bg-primary/10 text-primary font-medium"
+                                    : "text-foreground/70 hover:bg-secondary/10 hover:text-foreground"
+                                    }`}>
+                                    <item.icon className="w-5 h-5" />
+                                    {item.name}
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </nav>
 
-            <div className="p-4 border-t border-glass-border">
-                <Button
-                    variant="ghost"
-                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                        authService.logout();
-                        window.location.replace('/login');
-                    }}
-                >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Cerrar Sesión
-                </Button>
-            </div>
-        </aside>
+                <div className="p-4 border-t border-glass-border">
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                            authService.logout();
+                            window.location.replace('/login');
+                        }}
+                    >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Cerrar Sesión
+                    </Button>
+                </div>
+            </aside>
+        </>
     );
 }

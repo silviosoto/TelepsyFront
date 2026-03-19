@@ -69,9 +69,7 @@ export default function LoginPage() {
             <div className="w-full md:w-1/2 flex items-center justify-center p-8 z-10 relative">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center md:text-left">
-                        <Link href="/" className="inline-block mb-8 hover:opacity-80 transition-opacity">
-                            <Logo />
-                        </Link>
+                        <Logo />
                         <h1 className="text-3xl font-bold text-foreground mb-2">Bienvenido de nuevo</h1>
                         <p className="text-foreground/60">
                             Ingresa a tu espacio seguro y continúa tu camino hacia el bienestar.
@@ -87,24 +85,26 @@ export default function LoginPage() {
                         )}
                         <div className="space-y-4">
                             <div className="relative">
-                                <Input
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    required
-                                    icon={<Mail />}
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
+                                    <Input
+                                        type="email"
+                                        placeholder="tu@email.com"
+                                        required
+                                        icon={<Mail />}
+                                        value={email}
+                                        autoComplete="email"
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
                             </div>
                             <div className="relative">
-                                <Input
-                                    type="password"
-                                    placeholder="********"
-                                    required
-                                    icon={<Lock />}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
+                                    <Input
+                                        type="password"
+                                        placeholder="********"
+                                        required
+                                        icon={<Lock />}
+                                        value={password}
+                                        autoComplete="current-password"
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
                             </div>
                         </div>
 

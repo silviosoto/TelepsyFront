@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { User, Calendar, CreditCard, Home, LogOut, Settings } from "lucide-react";
+import { User, Calendar, CreditCard, Home, LogOut, Settings, Menu, X } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
@@ -22,6 +22,7 @@ export default function PatientDashboardLayout({
 }) {
     const pathname = usePathname();
     const router = useRouter();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!authService.isAuthenticated()) {
@@ -31,17 +32,29 @@ export default function PatientDashboardLayout({
 
     return (
         <div className="min-h-screen bg-background flex">
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 bg-white border-r border-glass-border hidden md:flex flex-col fixed h-full z-20">
-                <div className="p-6 border-b border-glass-border">
+            <aside className={`w-64 bg-white border-r border-glass-border flex flex-col fixed h-full z-40 transition-transform duration-300 md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                }`}>
+                <div className="p-6 border-b border-glass-border flex items-center justify-between">
                     <Logo />
+                    <button className="md:hidden p-2 text-foreground/50 hover:text-foreground" onClick={() => setIsSidebarOpen(false)}>
+                        <X className="w-6 h-6" />
+                    </button>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">
                     {menuItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
-                            <Link key={item.href} href={item.href}>
+                            <Link key={item.href} href={item.href} onClick={() => setIsSidebarOpen(false)}>
                                 <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
                                     ? "bg-primary/10 text-primary font-medium"
                                     : "text-foreground/70 hover:bg-secondary/10 hover:text-foreground"
@@ -69,10 +82,15 @@ export default function PatientDashboardLayout({
                 </div>
             </aside>
 
-            {/* Mobile Header (TODO: Add functionality) */}
+            {/* Mobile Header */}
             <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-glass-border md:hidden z-20 flex items-center justify-between px-4">
                 <Logo />
-                {/* Mobile menu toggle would go here */}
+                <button
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={() => setIsSidebarOpen(true)}
+                >
+                    <Menu className="h-6 w-6" />
+                </button>
             </div>
 
             {/* Main Content */}

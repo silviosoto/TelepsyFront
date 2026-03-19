@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { Sidebar } from "@/components/dashboard/Sidebar";
@@ -14,6 +14,7 @@ export default function PsychologistDashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!authService.isAuthenticated()) {
@@ -23,12 +24,15 @@ export default function PsychologistDashboardLayout({
 
     return (
         <div className="min-h-screen bg-background flex">
-            <Sidebar />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             {/* Mobile Header */}
             <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-glass-border md:hidden z-20 flex items-center justify-between px-4">
                 <Logo />
-                <button className="p-2 text-gray-600">
+                <button 
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={() => setIsSidebarOpen(true)}
+                >
                     <Menu className="h-6 w-6" />
                 </button>
             </div>

@@ -63,12 +63,15 @@ export const Navbar = () => {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <button
-                        className="md:hidden p-2 text-foreground"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    >
-                        {isMobileMenuOpen ? <X /> : <Menu />}
-                    </button>
+                    <div className="md:hidden flex items-center">
+                        <button
+                            className="p-2 -mr-2 text-foreground hover:bg-black/5 rounded-full transition-colors relative z-[60]"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </div>
             </motion.nav>
 
@@ -76,12 +79,12 @@ export const Navbar = () => {
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="fixed top-[72px] left-0 right-0 z-40 bg-white border-b border-glass-border md:hidden overflow-hidden"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="fixed inset-x-0 top-[72px] z-[50] bg-white border-b border-glass-border md:hidden overflow-hidden shadow-xl"
                     >
-                        <div className="flex flex-col p-6 gap-4">
+                        <div className="flex flex-col p-6 gap-4 bg-white">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
