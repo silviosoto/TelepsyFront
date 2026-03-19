@@ -6,10 +6,10 @@ export const Logo = () => {
         <Link href="/" className="flex items-center group">
             <Image
                 src="/logo.png"
-                alt="Mindcare Logo"
-                width={150}
-                height={50}
-                className="h-10 w-auto object-contain"
+                alt="Salumia Logo"
+                width={200}
+                height={60}
+                className="h-14 w-auto object-contain"
                 priority
             />
         </Link>

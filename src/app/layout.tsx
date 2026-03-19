@@ -16,28 +16,28 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Mindcare | Conectamos tu bienestar mental",
-    template: "%s | Mindcare"
+    default: "Salumia | Conectamos tu bienestar mental",
+    template: "%s | Salumia"
   },
   description: "La plataforma líder en Colombia para conectar psicólogos verificados con pacientes. Terapia online segura, rápida y profesional.",
   keywords: ["psicólogos colombia", "terapia online", "salud mental", "psicología virtual", "terapia en casa"],
-  authors: [{ name: "Mindcare Team" }],
-  creator: "Mindcare",
-  publisher: "Mindcare",
+  authors: [{ name: "Salumia Team" }],
+  creator: "Salumia",
+  publisher: "Salumia",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://mindcare.com.co"),
+  metadataBase: new URL("https://salumia.com.co"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Mindcare | Tu bienestar mental a un clic",
+    title: "Salumia | Tu bienestar mental a un clic",
     description: "Encuentra al psicólogo ideal para ti. Sesiones seguras, profesionales y desde la comodidad de tu hogar en Colombia.",
-    url: "https://mindcare.com.co",
-    siteName: "Mindcare",
+    url: "https://salumia.com.co",
+    siteName: "Salumia",
     locale: "es_CO",
     type: "website",
     images: [
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Mindcare - Salud Mental en Colombia",
+        alt: "Salumia - Salud Mental en Colombia",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mindcare | Conectamos tu bienestar mental",
+    title: "Salumia | Conectamos tu bienestar mental",
     description: "La forma más fácil y segura de encontrar psicólogos en Colombia.",
     images: ["/og-image.jpg"],
   },

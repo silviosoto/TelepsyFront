@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { psychologistService } from '@/services/psychologist.service'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://mindcare.com.co'
+  const baseUrl = 'https://salumia.com.co'
 
   // Fetch all psychologists to include in sitemap
   let psychologists: any[] = []

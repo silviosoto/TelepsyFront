@@ -12,12 +12,12 @@ export const Footer = () => {
                     <div className="flex items-center gap-2 mb-4">
                         <Image
                             src="/icon.png"
-                            alt="Mindcare Icon"
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 object-contain"
+                            alt="Salumia Icon"
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 object-contain"
                         />
-                        <span className="font-bold text-lg text-foreground">Mindcare</span>
+                        <span className="font-bold text-lg text-foreground">Salumia</span>
                     </div>
                     <p className="max-w-xs mb-6">
                         Conectando bienestar mental con tecnología humana. Tu espacio seguro para crecer.
@@ -49,7 +49,7 @@ export const Footer = () => {
                 </div>
             </div>
             <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-gray-100 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
-                <p>&copy; {new Date().getFullYear()} Mindcare Colombia S.A.S. Todos los derechos reservados.</p>
+                <p>&copy; {new Date().getFullYear()} Salumia Colombia S.A.S. Todos los derechos reservados.</p>
                 <p>Hecho con ❤️ en Colombia</p>
             </div>
         </footer>

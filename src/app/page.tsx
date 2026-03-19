@@ -9,10 +9,10 @@ import { Testimonials } from "@/components/sections/Testimonials";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Tu psicólogo ideal en Colombia | Mindcare",
+  title: "Tu psicólogo ideal en Colombia | Salumia",
   description: "Encuentra y agenda citas con los mejores psicólogos verificados en Colombia. Terapia online personalizada para ansiedad, depresión, pareja y más.",
   openGraph: {
-    title: "Encuentra tu psicólogo ideal en minutos | Mindcare",
+    title: "Encuentra tu psicólogo ideal en minutos | Salumia",
     description: "La red de profesionales de la salud mental más confiable de Colombia.",
   }
 };

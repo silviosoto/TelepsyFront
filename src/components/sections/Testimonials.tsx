@@ -8,7 +8,7 @@ const testimonials = [
     {
         name: "Camila R.",
         role: "Diseñadora Gráfica",
-        content: "Llevaba meses buscando un psicólogo con quien me sintiera cómoda. En Mindcare encontré a la Dra. Sofía en menos de 24 horas.",
+        content: "Llevaba meses buscando un psicólogo con quien me sintiera cómoda. En Salumia encontré a la Dra. Sofía en menos de 24 horas.",
         rating: 5
     },
     {
