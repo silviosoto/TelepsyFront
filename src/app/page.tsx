@@ -6,6 +6,16 @@ import { Hero } from "@/components/sections/Hero";
 import { Problem } from "@/components/sections/Problem";
 import { Solution } from "@/components/sections/Solution";
 import { Testimonials } from "@/components/sections/Testimonials";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tu psicólogo ideal en Colombia | Mindcare",
+  description: "Encuentra y agenda citas con los mejores psicólogos verificados en Colombia. Terapia online personalizada para ansiedad, depresión, pareja y más.",
+  openGraph: {
+    title: "Encuentra tu psicólogo ideal en minutos | Mindcare",
+    description: "La red de profesionales de la salud mental más confiable de Colombia.",
+  }
+};
 
 export default function Home() {
   return (
