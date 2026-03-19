@@ -93,9 +93,7 @@ export default function RegisterPage() {
             {/* Left Content (Visual) */}
             <div className={`hidden md:flex w-1/2 p-12 flex-col justify-between transition-colors duration-500 ${role === Role.PATIENT ? 'bg-primary/5' : 'bg-secondary/5'}`}>
                 <div>
-                    <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-                        <Logo />
-                    </Link>
+                    <Logo />
                 </div>
 
                 <div className="max-w-md">
@@ -166,15 +164,15 @@ export default function RegisterPage() {
                             )}
 
                             <div className="grid grid-cols-2 gap-4">
-                                <Input label="Nombre" name="firstName" placeholder="Tu nombre" required onChange={handleChange} />
-                                <Input label="Apellido" name="lastName" placeholder="Tu apellido" required onChange={handleChange} />
+                                <Input label="Nombre" name="firstName" placeholder="Tu nombre" required autoComplete="given-name" onChange={handleChange} />
+                                <Input label="Apellido" name="lastName" placeholder="Tu apellido" required autoComplete="family-name" onChange={handleChange} />
                             </div>
 
-                            <Input label="Correo Electrónico" name="email" type="email" placeholder="nombre@ejemplo.com" icon={<Mail />} required onChange={handleChange} />
+                            <Input label="Correo Electrónico" name="email" type="email" placeholder="nombre@ejemplo.com" icon={<Mail />} required autoComplete="email" onChange={handleChange} />
 
-                            <Input label="Teléfono (WhatsApp)" name="phoneNumber" type="tel" placeholder="+57 300 123 4567" icon={<Phone />} required onChange={handleChange} />
+                            <Input label="Teléfono (WhatsApp)" name="phoneNumber" type="tel" placeholder="+57 300 123 4567" icon={<Phone />} required autoComplete="tel" onChange={handleChange} />
 
-                            <Input label="Contraseña" name="password" type="password" placeholder="Crear contraseña segura" icon={<Lock />} required onChange={handleChange} />
+                            <Input label="Contraseña" name="password" type="password" placeholder="Crear contraseña segura" icon={<Lock />} required autoComplete="new-password" onChange={handleChange} />
 
                             {role === Role.PSYCHOLOGIST && (
                                 <motion.div
