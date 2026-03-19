@@ -8,6 +8,8 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { useRouter } from "next/navigation";
+import { API_CONFIG } from "@/config";
+
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -20,9 +22,8 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
         setError("");
-
         try {
-            const response = await fetch('http://localhost:5002/api/auth/login', {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
