@@ -8,6 +8,8 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { useRouter } from "next/navigation";
+import { API_CONFIG } from "@/config";
+
 
 enum Role {
     PATIENT = "Patient",
@@ -42,7 +44,7 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            const endpoint = 'http://localhost:5002/api/auth/register';
+            const endpoint = `${API_CONFIG.BASE_URL}/auth/register`;
 
             const payload = new FormData();
             payload.append("FirstName", formData.firstName);
