@@ -41,7 +41,9 @@ export default function LoginPage() {
             const user = {
                 id: data.userId,
                 email: data.email,
-                role: data.role
+                role: data.role,
+                firstName: data.firstName,
+                lastName: data.lastName
             };
             localStorage.setItem('user', JSON.stringify(user));
 
@@ -113,9 +115,9 @@ export default function LoginPage() {
                                 <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary/20 transition-all" />
                                 <span className="text-foreground/60 group-hover:text-foreground transition-colors">Recordarme</span>
                             </label>
-                            <Link href="#" className="font-medium text-primary hover:text-accent transition-colors">
-                                ¿Olvidaste tu contraseña?
-                            </Link>
+                             <Link href="/forgot-password" title="Recuperar contraseña" className="font-medium text-primary hover:text-accent transition-colors">
+                                 ¿Olvidaste tu contraseña?
+                             </Link>
                         </div>
 
                         <Button

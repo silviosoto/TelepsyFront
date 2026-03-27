@@ -29,5 +29,37 @@ export const authService = {
 
     isAuthenticated() {
         return !!this.getToken();
+    },
+
+    getRole() {
+        return this.getUser()?.role || null;
+    },
+
+    getUser() {
+        if (typeof window !== 'undefined') {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                try {
+                    return JSON.parse(userStr);
+                } catch (e) {
+                    console.error("Error parsing user from localStorage", e);
+                }
+            }
+        }
+        return null;
+    },
+
+    async forgotPassword(email: string) {
+        return fetchClient('/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+    },
+
+    async resetPassword(data: any) {
+        return fetchClient('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
     }
 };

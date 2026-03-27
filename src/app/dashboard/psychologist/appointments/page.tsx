@@ -22,6 +22,11 @@ interface Appointment {
     status: number; // 0: Pending, 1: Confirmed, 2: Completed, 3: Cancelled
     durationMinutes: number;
     notes?: string;
+    sessionPackage?: {
+        id: number;
+        totalSessions: number;
+        usedSessions: number;
+    };
 }
 
 export default function AppointmentsPage() {
@@ -291,6 +296,11 @@ export default function AppointmentsPage() {
                                 <div className="flex flex-wrap items-center gap-4">
                                     <div className="flex items-center gap-4 border-l md:border-l-0 md:border-r border-gray-100 pr-6 mr-2">
                                         {getStatusBadge(appointment.status)}
+                                        {appointment.sessionPackage && (
+                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                Paquete ({appointment.sessionPackage.usedSessions}/{appointment.sessionPackage.totalSessions})
+                                            </span>
+                                        )}
                                     </div>
 
                                     {appointment.status === 1 && (

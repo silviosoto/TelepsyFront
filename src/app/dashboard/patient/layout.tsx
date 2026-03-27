@@ -7,6 +7,7 @@ import { User, Calendar, CreditCard, Home, LogOut, Settings, Menu, X } from "luc
 import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
+import { UserAvatar } from "@/components/dashboard/UserAvatar";
 
 const menuItems = [
     { label: "Inicio", href: "/dashboard/patient", icon: Home },
@@ -67,7 +68,8 @@ export default function PatientDashboardLayout({
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-glass-border">
+                <div className="p-4 border-t border-glass-border space-y-4">
+                    <UserAvatar className="px-2" />
                     <Button
                         variant="ghost"
                         className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"

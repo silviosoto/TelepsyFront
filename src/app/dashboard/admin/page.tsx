@@ -29,6 +29,22 @@ export default function AdminDashboardPage() {
                     <h3 className="text-2xl font-bold mt-4 text-foreground">Pacientes</h3>
                     <p className="text-sm text-foreground/50 font-medium">Gestionar registros</p>
                 </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white p-6 rounded-3xl border border-glass-border shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    onClick={() => window.location.href = '/dashboard/admin/settings'}
+                >
+                    <div className="flex justify-between items-start">
+                        <div className={`p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform`}>
+                            <LayoutDashboard className="w-6 h-6" />
+                        </div>
+                    </div>
+                    <h3 className="text-2xl font-bold mt-4 text-foreground">Configuración</h3>
+                    <p className="text-sm text-foreground/50 font-medium">Comisiones y Descuentos</p>
+                </motion.div>
             </div>
         </div>
     );

@@ -7,6 +7,7 @@ import { authService } from "@/services/auth.service";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
 import { X } from "lucide-react";
+import { UserAvatar } from "./UserAvatar";
 
 const navItems = [
     { name: "Mi Perfil", href: "/dashboard/psychologist/profile", icon: User },
@@ -62,7 +63,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-glass-border">
+                <div className="p-4 border-t border-glass-border space-y-4">
+                    <UserAvatar className="px-2" />
                     <Button
                         variant="ghost"
                         className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"

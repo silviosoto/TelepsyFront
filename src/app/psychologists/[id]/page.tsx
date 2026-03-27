@@ -3,15 +3,16 @@ import { ProfileContent } from "./ProfileContent";
 import { psychologistService } from "@/services/psychologist.service";
 
 type Props = {
-    params: { id: string };
-    searchParams: { [key: string]: string | string[] | undefined };
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export async function generateMetadata(
     { params }: Props,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
-    const id = Number(params.id);
+    const resolvedParams = await params;
+    const id = Number(resolvedParams.id);
     
     try {
         const psychologist = await psychologistService.getPsychologistById(id);

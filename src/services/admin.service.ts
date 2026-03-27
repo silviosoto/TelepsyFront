@@ -81,5 +81,27 @@ export const adminService = {
             method: 'POST',
             body: JSON.stringify(payoutRequest)
         });
+    },
+
+    async getCommissionRate() {
+        return fetchClient(`/Admin/commission`);
+    },
+
+    async updateCommissionRate(data: { rate: number }) {
+        return fetchClient(`/Admin/commission`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    async getPackageDiscounts() {
+        return fetchClient(`/Admin/packages/discounts`);
+    },
+
+    async updatePackageDiscounts(data: { discount4Sessions: number, discount8Sessions: number, discount12Sessions: number }) {
+        return fetchClient(`/Admin/packages/discounts`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
     }
 };

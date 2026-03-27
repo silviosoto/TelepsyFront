@@ -31,7 +31,8 @@ interface Appointment {
     scheduledTime: string;
     status: number; // 0: Pending, 1: Confirmed, 2: Completed, 3: Cancelled
     therapyName: string;
-    rate: number;
+    isPackage: boolean;
+    sessionPackageId?: number;
     videoLink?: string;
 }
 
@@ -311,6 +312,11 @@ export default function AppointmentsPage() {
                                                         <Video className="w-3 h-3" />
                                                         Sesión Online
                                                     </div>
+                                                    {app.isPackage && (
+                                                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-amber-500/10 text-amber-600">
+                                                            Paquete
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <h3 className="text-xl font-black text-foreground group-hover:text-primary transition-colors">
