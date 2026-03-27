@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, MapPin, Calendar, Clock, Award, BookOpen, MessageCircle, CheckCircle, Shield, ArrowLeft, ChevronDown, Check } from "lucide-react";
+import { Star, MapPin, Calendar, Clock, Award, BookOpen, MessageCircle, CheckCircle, Shield, ArrowLeft, ChevronDown, Check, Package } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/sections/Footer";
 import { Button } from "@/components/Button";
@@ -34,6 +34,23 @@ export function ProfileContent() {
     const [allSchedules, setAllSchedules] = useState<ScheduleItem[]>([]);
     const [dynamicTimeSlots, setDynamicTimeSlots] = useState<string[]>([]);
     const [isBooking, setIsBooking] = useState(false);
+    const [packageSessions, setPackageSessions] = useState<number | null>(null);
+    const [patientPackages, setPatientPackages] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchPatientPackages = async () => {
+            const token = localStorage.getItem("token");
+            if (token) {
+                try {
+                    const packages = await appointmentService.getMyPackages();
+                    setPatientPackages(packages);
+                } catch (e) {
+                    console.error("No se pudieron cargar los paquetes del paciente", e);
+                }
+            }
+        };
+        fetchPatientPackages();
+    }, []);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -120,7 +137,8 @@ export function ProfileContent() {
             const result = await appointmentService.initiateBooking({
                 psychologistId: id,
                 therapyId: selectedService.therapyId,
-                scheduledTime: scheduledTime.toISOString()
+                scheduledTime: scheduledTime.toISOString(),
+                packageSessions: packageSessions
             });
 
             if (result && result.appointmentId) {
@@ -165,6 +183,8 @@ export function ProfileContent() {
         d.setDate(d.getDate() + i + 1);
         return d;
     });
+
+    const activePackageForSelectedService = patientPackages.find(p => p.therapyId === selectedService?.therapyId && p.psychologistId === id);
 
     return (
         <main className="min-h-screen bg-background">
@@ -389,7 +409,50 @@ export function ProfileContent() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
+                                {activePackageForSelectedService ? (
+                                    <div className="space-y-3 pt-4 border-t border-glass-border">
+                                        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
+                                            <p className="text-sm font-bold text-primary mb-1 flex items-center gap-2">
+                                                <Package className="w-4 h-4" /> Paquete Activo Detectado
+                                            </p>
+                                            <p className="text-xs text-foreground/70">
+                                                Tienes un paquete de {activePackageForSelectedService.totalSessions} sesiones disponible. Al agendar, se descontará automáticamente 1 sesión ({activePackageForSelectedService.usedSessions}/{activePackageForSelectedService.totalSessions} usadas).
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 pt-4 border-t border-glass-border">
+                                        <span className="text-foreground/60 font-medium text-sm">Modalidad (Opcional)</span>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => setPackageSessions(null)}
+                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${packageSessions === null ? 'bg-primary text-white' : 'bg-secondary/5 text-foreground/70 hover:bg-secondary/10'}`}
+                                            >
+                                                1 Sesión
+                                            </button>
+                                            <button
+                                                onClick={() => setPackageSessions(4)}
+                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${packageSessions === 4 ? 'bg-primary text-white' : 'bg-secondary/5 text-foreground/70 hover:bg-secondary/10'}`}
+                                            >
+                                                Paquete 4 Sesiones
+                                            </button>
+                                            <button
+                                                onClick={() => setPackageSessions(8)}
+                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${packageSessions === 8 ? 'bg-primary text-white' : 'bg-secondary/5 text-foreground/70 hover:bg-secondary/10'}`}
+                                            >
+                                                Paquete 8 Sesiones
+                                            </button>
+                                            <button
+                                                onClick={() => setPackageSessions(12)}
+                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${packageSessions === 12 ? 'bg-primary text-white' : 'bg-secondary/5 text-foreground/70 hover:bg-secondary/10'}`}
+                                            >
+                                                Paquete 12 Sesiones
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-6 pt-4 border-t border-glass-border">
                                     <div>
                                         <label className="block text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                                             <Calendar className="w-4 h-4 text-primary" /> Selecciona un día

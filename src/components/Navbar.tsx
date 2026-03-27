@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "./Button";
 import { Logo } from "./Logo";
 import { cn } from "../lib/utils";
+import { authService } from "@/services/auth.service";
 
 const navLinks = [
     { name: "Especialistas", href: "/psychologists" },
@@ -17,12 +18,21 @@ const navLinks = [
 export const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
+        
+        // Initial auth check
+        if (typeof window !== "undefined") {
+            setIsAuthenticated(authService.isAuthenticated());
+            setUserRole(authService.getRole());
+        }
+
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -53,12 +63,20 @@ export const Navbar = () => {
                             ))}
                         </div>
                         <div className="flex items-center gap-4">
-                            <Link href="/login" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
-                                Iniciar Sesión
-                            </Link>
-                            <Link href="/register">
-                                <Button size="sm">Empezar Ahora</Button>
-                            </Link>
+                            {isAuthenticated ? (
+                                <Link href={`/dashboard/${userRole?.toLowerCase() || 'patient'}`}>
+                                    <Button size="sm">Ir a mi Panel</Button>
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link href="/login" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+                                        Iniciar Sesión
+                                    </Link>
+                                    <Link href="/register">
+                                        <Button size="sm">Empezar Ahora</Button>
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -96,12 +114,20 @@ export const Navbar = () => {
                                 </Link>
                             ))}
                             <div className="h-px bg-glass-border my-2" />
-                            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-foreground/80 hover:text-primary py-2">
-                                Iniciar Sesión
-                            </Link>
-                            <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                                <Button className="w-full">Empezar Ahora</Button>
-                            </Link>
+                            {isAuthenticated ? (
+                                <Link href={`/dashboard/${userRole?.toLowerCase() || 'patient'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Button className="w-full">Ir a mi Panel</Button>
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-foreground/80 hover:text-primary py-2">
+                                        Iniciar Sesión
+                                    </Link>
+                                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <Button className="w-full">Empezar Ahora</Button>
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 )}

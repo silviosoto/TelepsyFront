@@ -40,11 +40,15 @@ export const appointmentService = {
         });
     },
 
-    async initiateBooking(bookingData: { psychologistId: number; therapyId: number; scheduledTime: string }) {
+    async initiateBooking(bookingData: { psychologistId: number; therapyId: number; scheduledTime: string; packageSessions?: number | null }) {
         return fetchClient('/appointments/initiate', {
             method: 'POST',
             body: JSON.stringify(bookingData)
         });
+    },
+
+    async getMyPackages() {
+        return fetchClient('/appointments/my-packages');
     },
 
     async getCheckoutSummary(appointmentId: number) {
