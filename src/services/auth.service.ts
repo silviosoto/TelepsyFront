@@ -32,12 +32,15 @@ export const authService = {
     },
 
     getRole() {
+        return this.getUser()?.role || null;
+    },
+
+    getUser() {
         if (typeof window !== 'undefined') {
             const userStr = localStorage.getItem('user');
             if (userStr) {
                 try {
-                    const user = JSON.parse(userStr);
-                    return user.role;
+                    return JSON.parse(userStr);
                 } catch (e) {
                     console.error("Error parsing user from localStorage", e);
                 }

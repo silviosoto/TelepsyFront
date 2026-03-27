@@ -41,7 +41,9 @@ export default function LoginPage() {
             const user = {
                 id: data.userId,
                 email: data.email,
-                role: data.role
+                role: data.role,
+                firstName: data.firstName,
+                lastName: data.lastName
             };
             localStorage.setItem('user', JSON.stringify(user));
 

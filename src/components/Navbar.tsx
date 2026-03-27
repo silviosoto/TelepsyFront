@@ -8,6 +8,7 @@ import { Button } from "./Button";
 import { Logo } from "./Logo";
 import { cn } from "../lib/utils";
 import { authService } from "@/services/auth.service";
+import { UserAvatar } from "./dashboard/UserAvatar";
 
 const navLinks = [
     { name: "Especialistas", href: "/psychologists" },
@@ -64,9 +65,12 @@ export const Navbar = () => {
                         </div>
                         <div className="flex items-center gap-4">
                             {isAuthenticated ? (
-                                <Link href={`/dashboard/${userRole?.toLowerCase() || 'patient'}`}>
-                                    <Button size="sm">Ir a mi Panel</Button>
-                                </Link>
+                                <div className="flex items-center gap-4">
+                                    <UserAvatar className="hidden lg:flex" />
+                                    <Link href={`/dashboard/${userRole?.toLowerCase() || 'patient'}`}>
+                                        <Button size="sm">Ir a mi Panel</Button>
+                                    </Link>
+                                </div>
                             ) : (
                                 <>
                                     <Link href="/login" className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
