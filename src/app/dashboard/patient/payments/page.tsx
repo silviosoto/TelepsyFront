@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { invoiceService, Invoice } from "@/services/invoice.service";
+import { parseApiDate } from "@/lib/utils";
 import { Button } from "@/components/Button";
 import { toast } from "sonner";
 
@@ -112,7 +113,7 @@ export default function PaymentsPage() {
                         <AnimatePresence mode="popLayout">
                             {filteredInvoices.map((inv, index) => {
                                 const status = getStatusInfo(inv.status);
-                                const dateObj = new Date(inv.issueDate);
+                                const dateObj = parseApiDate(inv.issueDate);
 
                                 return (
                                     <motion.div
