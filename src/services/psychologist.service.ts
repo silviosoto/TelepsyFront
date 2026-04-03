@@ -31,8 +31,7 @@ export interface PsychologistProfileUI extends PsychologistUI {
     phone: string; // From person
     state: string; // From person (Department)
     licenseNumber: string;
-    bankAccountType?: string;
-    bankAccountNumber?: string;
+    paymentAccount?: string;
 }
 
 export interface PatientListItemUI {
@@ -129,8 +128,7 @@ export const psychologistService = {
             phone: psy.person?.phoneNumber || '',
             state: psy.person?.state || '',
             licenseNumber: psy.licenseNumber || '',
-            bankAccountType: psy.bankAccountType || '',
-            bankAccountNumber: psy.bankAccountNumber || ''
+            paymentAccount: psy.paymentAccount || ''
         };
     },
 

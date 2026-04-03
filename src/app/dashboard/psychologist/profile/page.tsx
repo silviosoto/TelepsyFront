@@ -101,8 +101,7 @@ export default function ProfilePage() {
                 sessionRate: psychologist?.price || 0,
                 bio: data.bio,
                 hobbies: data.hobbies,
-                bankAccountType: data.bankAccountType,
-                bankAccountNumber: data.bankAccountNumber
+                paymentAccount: data.paymentAccount
             };
 
             if (!psychologistId) return;
@@ -370,29 +369,16 @@ export default function ProfilePage() {
                                 Información de Pagos (Privado)
                             </h3>
                             <p className="text-sm text-gray-500">Estos datos se utilizarán únicamente para realizar los pagos de tus sesiones completadas.</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6">
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Tipo de Cuenta</label>
-                                    <select
-                                        {...register("bankAccountType")}
-                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        <option value="">Selecciona...</option>
-                                        <option value="Ahorros">Ahorros</option>
-                                        <option value="Corriente">Corriente</option>
-                                    </select>
+                                    <Input
+                                        label="Información de Cuenta / Nequi / Otros"
+                                        {...register("paymentAccount")}
+                                        placeholder="Ej: Nequi 3101234567 o Banco X Ahorros N° 123..."
+                                        title="Ingresa los datos donde el administrador te realizará los pagos manualmente."
+                                    />
+                                    <p className="text-xs text-gray-500">Esta información es privada y solo el administrador podrá verla.</p>
                                 </div>
-                                <Input
-                                    label="Número de Cuenta"
-                                    {...register("bankAccountNumber", {
-                                        pattern: { 
-                                            value: /^[0-9-]+$/, 
-                                            message: "El número de cuenta solo puede contener números y guiones" 
-                                        }
-                                    })}
-                                    placeholder="Ej: 123-456789-01"
-                                    error={errors.bankAccountNumber?.message}
-                                />
                             </div>
                         </div>
                     </div>
@@ -467,15 +453,11 @@ export default function ProfilePage() {
                                     <span className="font-medium text-gray-900">{psychologist.documentType} {psychologist.documentNumber}</span>
                                 </div>
                                 <div className="pt-4 mt-2 border-t-2 border-dashed border-gray-100">
-                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Datos Bancarios</h4>
+                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Información de Pago (Administrador)</h4>
                                     <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs">Tipo:</span>
-                                            <span className="font-medium text-gray-900">{psychologist.bankAccountType || 'No definido'}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs">N° Cuenta:</span>
-                                            <span className="font-medium text-gray-900">{psychologist.bankAccountNumber || 'No definido'}</span>
+                                        <div className="flex justify-between items-start gap-2">
+                                            <span className="text-xs flex-shrink-0">Cuenta:</span>
+                                            <span className="font-medium text-gray-900 text-right">{psychologist.paymentAccount || 'No definida'}</span>
                                         </div>
                                     </div>
                                 </div>

@@ -37,6 +37,7 @@ interface PaymentItem {
     patientAttended: boolean;
     psychologistAttended: boolean;
     appointmentId: number;
+    psychologistPaymentAccount?: string;
 }
 
 export default function AdminPaymentsPage() {
@@ -322,6 +323,10 @@ export default function AdminPaymentsPage() {
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-foreground">{payment.psychologistName}</span>
                                                 <span className="text-xs text-foreground/50">{payment.serviceName}</span>
+                                                <div className="mt-1 flex items-center gap-1.5 p-1.5 bg-primary/5 rounded-lg border border-primary/10 w-fit">
+                                                    <span className="text-[9px] font-black uppercase text-primary tracking-tighter">Cuenta:</span>
+                                                    <span className="text-[10px] text-foreground/60 font-medium">{payment.psychologistPaymentAccount || 'Sin configurar'}</span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="p-4">

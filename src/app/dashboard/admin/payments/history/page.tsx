@@ -34,6 +34,7 @@ interface PaymentHistoryItem {
     appointmentId: number;
     therapyName: string;
     psychologistName: string;
+    psychologistPaymentAccount?: string;
 }
 
 export default function AdminPaymentHistoryPage() {
@@ -321,6 +322,10 @@ export default function AdminPaymentHistoryPage() {
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-medium text-foreground/80">{payment.psychologistName}</span>
                                                 <span className="text-xs text-primary font-medium">{payment.therapyName}</span>
+                                                <div className="mt-1 flex items-center gap-1.5 p-1 px-2 bg-secondary/5 rounded-md border border-glass-border w-fit">
+                                                    <span className="text-[8px] font-black uppercase text-foreground/30 tracking-widest">Cuenta:</span>
+                                                    <span className="text-[10px] text-foreground/40 font-medium">{payment.psychologistPaymentAccount || 'Sin datos'}</span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="p-6 text-right">
