@@ -76,10 +76,29 @@ export const adminService = {
         return fetchClient(`/Admin/payments?${queryParams.toString()}`);
     },
 
+    async getAllPayments(page: number = 1, pageSize: number = 10, search?: string, identification?: string, status?: string, startDate?: string, endDate?: string) {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page.toString());
+        queryParams.append('pageSize', pageSize.toString());
+        if (search) queryParams.append('search', search);
+        if (identification) queryParams.append('identification', identification);
+        if (status && status !== 'all') queryParams.append('status', status);
+        if (startDate) queryParams.append('startDate', startDate);
+        if (endDate) queryParams.append('endDate', endDate);
+
+        return fetchClient(`/Admin/payments/all?${queryParams.toString()}`);
+    },
+
     async processPayout(payoutRequest: { psychologistId: number, appointmentIds: number[] }) {
         return fetchClient(`/Admin/payments/payout`, {
             method: 'POST',
             body: JSON.stringify(payoutRequest)
+        });
+    },
+
+    async markPaymentAsPaid(paymentId: number) {
+        return fetchClient(`/Admin/payments/${paymentId}/mark-paid`, {
+            method: 'POST'
         });
     },
 

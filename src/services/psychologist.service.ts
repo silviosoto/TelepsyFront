@@ -8,6 +8,8 @@ export interface PsychologistUI {
     specialization: string;
     city: string;
     gender: string;
+    documentType: string;
+    documentNumber: string;
     experience: number;
     price: number;
     rating: string;
@@ -29,6 +31,8 @@ export interface PsychologistProfileUI extends PsychologistUI {
     phone: string; // From person
     state: string; // From person (Department)
     licenseNumber: string;
+    bankAccountType?: string;
+    bankAccountNumber?: string;
 }
 
 export interface PatientListItemUI {
@@ -58,6 +62,8 @@ export const psychologistService = {
             specialization: psy.specialization,
             city: psy.person?.city || 'Online',
             gender: psy.person?.gender || 'N/A',
+            documentType: psy.person?.documentType || '',
+            documentNumber: psy.person?.documentNumber || '',
             experience: psy.experienceYears || 5,
             price: psy.sessionRate || 100000,
             rating: (4.5).toFixed(1),
@@ -122,7 +128,9 @@ export const psychologistService = {
             email: psy.person?.user?.email || psy.person?.email || '',
             phone: psy.person?.phoneNumber || '',
             state: psy.person?.state || '',
-            licenseNumber: psy.licenseNumber || ''
+            licenseNumber: psy.licenseNumber || '',
+            bankAccountType: psy.bankAccountType || '',
+            bankAccountNumber: psy.bankAccountNumber || ''
         };
     },
 

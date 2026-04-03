@@ -47,6 +47,7 @@ export default function CheckoutPage() {
             if (!id) return;
             try {
                 const data = await appointmentService.getCheckoutSummary(id);
+                console.log("Sumary", { data })
                 setSummary(data);
             } catch (error: any) {
                 console.error("Failed to fetch checkout summary", error);
@@ -65,7 +66,9 @@ export default function CheckoutPage() {
 
         setIsProcessing(true);
         try {
+            console.log(summary.invoiceId)
             const data = await paymentService.getCheckoutData(summary.invoiceId);
+            console.log({ data })
             setCheckoutData(data);
 
             // Wait for state update then submit form
@@ -76,6 +79,7 @@ export default function CheckoutPage() {
             // but we can also just use the data to create a form on the fly
             setTimeout(() => {
                 const form = document.getElementById('payu-form') as HTMLFormElement;
+                console.log({ form })
                 if (form) form.submit();
             }, 500);
 
@@ -252,7 +256,7 @@ export default function CheckoutPage() {
                     id="payu-form"
                     method="post"
                     action={checkoutData.checkoutUrl}
-                    className="hidden"
+                // className="hidden"
                 >
                     <input name="merchantId" type="hidden" value={checkoutData.merchantId} />
                     <input name="accountId" type="hidden" value={checkoutData.accountId} />

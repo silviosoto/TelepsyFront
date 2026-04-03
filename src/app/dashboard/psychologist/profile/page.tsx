@@ -92,13 +92,17 @@ export default function ProfilePage() {
                 state: data.state,
                 phoneNumber: data.phone,
                 gender: data.gender,
+                documentType: data.documentType,
+                documentNumber: data.documentNumber,
                 licenseNumber: psychologist?.licenseNumber || "MOCK-LICENSE",
                 specialization: data.specialization,
                 university: data.university,
                 experienceYears: Number(data.experience),
                 sessionRate: psychologist?.price || 0,
                 bio: data.bio,
-                hobbies: data.hobbies
+                hobbies: data.hobbies,
+                bankAccountType: data.bankAccountType,
+                bankAccountNumber: data.bankAccountNumber
             };
 
             if (!psychologistId) return;
@@ -271,7 +275,7 @@ export default function ProfilePage() {
                                     title="El correo está vinculado a tu cuenta y no se puede cambiar desde aquí."
                                 />
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-sm font-medium text-gray-700">Género *</label>
+                                    <label className="text-sm font-medium text-gray-700">Généro *</label>
                                     <select
                                         {...register("gender", { required: "El género es requerido" })}
                                         className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
@@ -282,6 +286,26 @@ export default function ProfilePage() {
                                     </select>
                                     {errors.gender && <p className="text-xs text-red-500">{errors.gender.message}</p>}
                                 </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Tipo de Documento *</label>
+                                    <select
+                                        {...register("documentType", { required: "El tipo de documento es requerido" })}
+                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                    >
+                                        <option value="">Selecciona...</option>
+                                        <option value="CC">CC – Cédula de Ciudadanía</option>
+                                        <option value="TI">TI – Tarjeta de Identidad</option>
+                                        <option value="CE">CE – Cédula de Extranjería</option>
+                                        <option value="NIT">NIT – Número de Identificación Tributaria</option>
+                                        <option value="RC">RC – Registro Civil</option>
+                                    </select>
+                                    {errors.documentType && <p className="text-xs text-red-500">{errors.documentType.message}</p>}
+                                </div>
+                                <Input
+                                    label="Número de Documento *"
+                                    {...register("documentNumber", { required: "El número de documento es requerido" })}
+                                    error={errors.documentNumber?.message}
+                                />
                             </div>
                         </div>
                     </div>
@@ -337,6 +361,38 @@ export default function ProfilePage() {
                                     placeholder="Ej: Yoga, Lectura sobre filosofía, Senderismo..."
                                 />
                                 <p className="text-xs text-gray-400 mt-1">Compartir tus hobbies puede ayudar a los pacientes a conectar mejor contigo.</p>
+                            </div>
+                        </div>
+
+                        <div className="pt-8 border-t border-glass-border space-y-4">
+                            <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                                <span className="p-1.5 bg-primary/10 rounded-lg"><Info className="w-4 h-4" /></span>
+                                Información de Pagos (Privado)
+                            </h3>
+                            <p className="text-sm text-gray-500">Estos datos se utilizarán únicamente para realizar los pagos de tus sesiones completadas.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-gray-700">Tipo de Cuenta</label>
+                                    <select
+                                        {...register("bankAccountType")}
+                                        className="h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                    >
+                                        <option value="">Selecciona...</option>
+                                        <option value="Ahorros">Ahorros</option>
+                                        <option value="Corriente">Corriente</option>
+                                    </select>
+                                </div>
+                                <Input
+                                    label="Número de Cuenta"
+                                    {...register("bankAccountNumber", {
+                                        pattern: { 
+                                            value: /^[0-9-]+$/, 
+                                            message: "El número de cuenta solo puede contener números y guiones" 
+                                        }
+                                    })}
+                                    placeholder="Ej: 123-456789-01"
+                                    error={errors.bankAccountNumber?.message}
+                                />
                             </div>
                         </div>
                     </div>
@@ -405,6 +461,23 @@ export default function ProfilePage() {
                                 <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                                     <span>Ciudad:</span>
                                     <span className="font-medium text-gray-900">{psychologist.city}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                    <span>Documento:</span>
+                                    <span className="font-medium text-gray-900">{psychologist.documentType} {psychologist.documentNumber}</span>
+                                </div>
+                                <div className="pt-4 mt-2 border-t-2 border-dashed border-gray-100">
+                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Datos Bancarios</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs">Tipo:</span>
+                                            <span className="font-medium text-gray-900">{psychologist.bankAccountType || 'No definido'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs">N° Cuenta:</span>
+                                            <span className="font-medium text-gray-900">{psychologist.bankAccountNumber || 'No definido'}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

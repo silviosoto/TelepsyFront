@@ -19,6 +19,7 @@ import { Button } from "@/components/Button";
 import { toast } from "sonner";
 import { adminService } from "@/services/admin.service";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
+import Link from "next/link";
 
 interface PaymentItem {
     invoiceId: number;
@@ -160,6 +161,11 @@ export default function AdminPaymentsPage() {
                     <h1 className="text-3xl font-bold text-foreground mb-1">Gestión de Pagos</h1>
                     <p className="text-foreground/60">Administra los pagos de los pacientes y liquida las sesiones a los psicólogos.</p>
                 </div>
+                <Link href="/dashboard/admin/payments/history">
+                    <Button variant="outline" className="h-11 rounded-2xl shadow-lg border-primary/20 text-primary hover:bg-primary/5">
+                        <CreditCard className="w-4 h-4 mr-2" /> Ver Historial
+                    </Button>
+                </Link>
             </div>
 
             {/* Filters */}

@@ -15,6 +15,8 @@ interface ProfileFormConnect {
     lastName: string;
     dateOfBirth: string;
     gender: string;
+    documentType: string;
+    documentNumber: string;
     city: string;
     hobbies: string;
 }
@@ -40,6 +42,8 @@ export default function PatientProfilePage() {
                         setValue('dateOfBirth', data.dateOfBirth.split('T')[0]);
                     }
                     setValue('gender', data.gender || "");
+                    setValue('documentType', data.documentType || "");
+                    setValue('documentNumber', data.documentNumber || "");
                     setValue('city', data.city || "");
                     setValue('hobbies', data.hobbies || "");
                 }
@@ -146,6 +150,33 @@ export default function PatientProfilePage() {
                                         type="date"
                                         className="rounded-2xl h-14 bg-secondary/5 border-transparent focus:bg-white focus:border-primary/20 transition-all"
                                         {...register("dateOfBirth")}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-foreground/60 mb-2 ml-1">Tipo de Documento</label>
+                                    <select
+                                        {...register("documentType", { required: "El tipo de documento es obligatorio" })}
+                                        className="w-full h-14 rounded-2xl border-transparent bg-secondary/5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary/20 transition-all shadow-sm"
+                                    >
+                                        <option value="">Selecciona...</option>
+                                        <option value="CC">CC – Cédula de Ciudadanía</option>
+                                        <option value="TI">TI – Tarjeta de Identidad</option>
+                                        <option value="CE">CE – Cédula de Extranjería</option>
+                                        <option value="NIT">NIT – Número de Identificación Tributaria</option>
+                                        <option value="RC">RC – Registro Civil</option>
+                                    </select>
+                                    {errors.documentType && <p className="text-xs text-red-500 mt-1 ml-1">{errors.documentType.message}</p>}
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <Input
+                                        label="Número de Documento"
+                                        placeholder="Tu número de identificación"
+                                        className="rounded-2xl h-14 bg-secondary/5 border-transparent focus:bg-white focus:border-primary/20 transition-all"
+                                        {...register("documentNumber", { required: "El número de documento es obligatorio" })}
+                                        error={errors.documentNumber?.message}
                                     />
                                 </div>
                                 <div className="space-y-2">

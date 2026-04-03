@@ -178,9 +178,9 @@ export function ProfileContent() {
         );
     }
 
-    const availableDates = Array.from({ length: 5 }, (_, i) => {
+    const availableDates = Array.from({ length: 7 }, (_, i) => {
         const d = new Date();
-        d.setDate(d.getDate() + i + 1);
+        d.setDate(d.getDate() + i);
         return d;
     });
 
@@ -486,18 +486,28 @@ export function ProfileContent() {
                                             <Clock className="w-4 h-4 text-primary" /> Horarios disponibles
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {dynamicTimeSlots.length > 0 ? dynamicTimeSlots.map((time) => (
-                                                <button
-                                                    key={time}
-                                                    onClick={() => setSelectedTime(time)}
-                                                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${selectedTime === time
-                                                        ? "bg-primary text-white shadow-md"
-                                                        : "bg-secondary/5 text-foreground/70 hover:bg-secondary/10"
-                                                        }`}
-                                                >
-                                                    {time}
-                                                </button>
-                                            )) : (
+                                            {dynamicTimeSlots.length > 0 ? dynamicTimeSlots.map((time) => {
+                                                const isToday = selectedDate.toDateString() === new Date().toDateString();
+                                                const slotHour = parseInt(time.split(':')[0]);
+                                                const currentHour = new Date().getHours();
+                                                const isPast = isToday && slotHour <= currentHour;
+
+                                                return (
+                                                    <button
+                                                        key={time}
+                                                        disabled={isPast}
+                                                        onClick={() => setSelectedTime(time)}
+                                                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${selectedTime === time
+                                                            ? "bg-primary text-white shadow-md"
+                                                            : isPast
+                                                                ? "bg-secondary/5 text-foreground/20 cursor-not-allowed opacity-50"
+                                                                : "bg-secondary/5 text-foreground/70 hover:bg-secondary/10"
+                                                            }`}
+                                                    >
+                                                        {time}
+                                                    </button>
+                                                );
+                                            }) : (
                                                 <div className="col-span-2 text-center py-4 bg-secondary/5 rounded-xl border border-glass-border">
                                                     <p className="text-xs font-bold text-foreground/40 italic">No hay horarios disponibles</p>
                                                 </div>

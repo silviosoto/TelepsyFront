@@ -123,26 +123,7 @@ export default function PatientDashboard() {
                 )}
             </section>
 
-            {/* Recent Activity / Recommendations */}
-            <section className="pt-4 border-t border-glass-border">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-foreground">Recomendados para ti</h2>
-                    <Link href="/psychologists" className="text-sm text-primary hover:underline">Ver todos</Link>
-                </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-white border border-glass-border rounded-xl p-4 flex gap-4 items-center">
-                        <div className="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center text-secondary font-bold">
-                            AP
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-foreground">Ana Pérez</h4>
-                            <p className="text-xs text-foreground/60">Psicología Clínica</p>
-                        </div>
-                        <Button size="sm" variant="ghost" className="ml-auto">Ver</Button>
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }
