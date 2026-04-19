@@ -62,8 +62,8 @@ export const appointmentService = {
         });
     },
 
-    async getAvailableSlots(psychologistId: number, date: string) {
-        return fetchClient(`/appointments/available-slots/${psychologistId}?date=${date}`);
+    async getAvailableSlots(psychologistId: number, date: string, durationMinutes: number = 60) {
+        return fetchClient(`/appointments/available-slots/${psychologistId}?date=${date}&durationMinutes=${durationMinutes}`);
     },
 
     async cancelAppointment(id: number) {

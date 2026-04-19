@@ -36,6 +36,7 @@ export function ProfileContent() {
     const [isBooking, setIsBooking] = useState(false);
     const [packageSessions, setPackageSessions] = useState<number | null>(null);
     const [patientPackages, setPatientPackages] = useState<any[]>([]);
+    const [availableSlots, setAvailableSlots] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchPatientPackages = async () => {
@@ -116,7 +117,19 @@ export function ProfileContent() {
 
         setDynamicTimeSlots(slots.sort());
         setSelectedTime(null);
-    }, [selectedDate, allSchedules]);
+
+        // Fetch available slots from backend to identify booked ones
+        const fetchAvailable = async () => {
+            try {
+                const dateStr = selectedDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                const available = await appointmentService.getAvailableSlots(id, dateStr, 60);
+                setAvailableSlots(available);
+            } catch (e) {
+                console.error("Error fetching available slots", e);
+            }
+        };
+        fetchAvailable();
+    }, [selectedDate, allSchedules, id]);
 
     const handleBooking = async () => {
         if (!selectedService || !selectedTime) return;
@@ -492,19 +505,35 @@ export function ProfileContent() {
                                                 const currentHour = new Date().getHours();
                                                 const isPast = isToday && slotHour <= currentHour;
 
+                                                // Check if it's available in backend slots
+                                                // We compare hours carefully
+                                                const isAvailable = availableSlots.some(as => {
+                                                    const asDate = new Date(as.startTime);
+                                                    // Since backend returns UTC, we need to compare correctly.
+                                                    // But the backend GetAvailableSlotsAsync uses .ToUniversalTime() which might 
+                                                    // be based on server timezone. Let's assume for now they match local hours 
+                                                    // if both are in same timezone or if we use local getHours().
+                                                    const asTimeStr = `${asDate.getHours().toString().padStart(2, '0')}:00`;
+                                                    return asTimeStr === time;
+                                                });
+
+                                                const isBooked = !isAvailable && !isPast;
+
                                                 return (
                                                     <button
                                                         key={time}
-                                                        disabled={isPast}
+                                                        disabled={isPast || isBooked}
                                                         onClick={() => setSelectedTime(time)}
                                                         className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${selectedTime === time
                                                             ? "bg-primary text-white shadow-md"
                                                             : isPast
                                                                 ? "bg-secondary/5 text-foreground/20 cursor-not-allowed opacity-50"
-                                                                : "bg-secondary/5 text-foreground/70 hover:bg-secondary/10"
+                                                                : isBooked
+                                                                    ? "bg-red-50 text-red-300 border border-red-100 cursor-not-allowed opacity-70"
+                                                                    : "bg-secondary/5 text-foreground/70 hover:bg-secondary/10"
                                                             }`}
                                                     >
-                                                        {time}
+                                                        {isBooked ? "Ocupado" : time}
                                                     </button>
                                                 );
                                             }) : (
