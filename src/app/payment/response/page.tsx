@@ -123,7 +123,7 @@ function PaymentResponseContent() {
                         <Button
                             variant="outline"
                             className="h-14 px-10 rounded-2xl text-lg group sm:w-auto w-full"
-                            onClick={() => router.push("/")}
+                            onClick={() => router.push("/dashboard/patient")}
                         >
                             <Home className="w-5 h-5 mr-2" />
                             Volver al Inicio

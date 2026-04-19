@@ -175,6 +175,8 @@ export default function AppointmentsPage() {
         const now = new Date();
 
         switch (status) {
+            case 0: // Pending
+                return { label: "Pendiente de pago", color: "bg-amber-500/10 text-amber-600", icon: AlertCircle };
             case 1: // Confirmed
                 return { label: "Confirmada", color: "bg-emerald-500/10 text-emerald-600", icon: CheckCircle2 };
             case 2: // Completed
@@ -182,7 +184,7 @@ export default function AppointmentsPage() {
             case 3: // Cancelled
                 return { label: "Cancelada", color: "bg-rose-500/10 text-rose-600", icon: XCircle };
             default:
-                return { label: "Confirmada", color: "bg-emerald-500/10 text-emerald-600", icon: CheckCircle2 };
+                return { label: "Pendiente", color: "bg-amber-500/10 text-amber-600", icon: AlertCircle };
         }
     };
 
@@ -270,7 +272,7 @@ export default function AppointmentsPage() {
                     <div className="grid gap-4">
                         <AnimatePresence mode="popLayout">
                             {filteredAppointments.map((app, index) => {
-                                const status = getStatusInfo(app.status, app.scheduledTime);
+                                const statusInfo = getStatusInfo(app.status, app.scheduledTime);
                                 const isUpcoming = app.status === 1 || app.status === 0;
 
                                 const dateObj = parseApiDate(app.scheduledTime);
@@ -303,9 +305,9 @@ export default function AppointmentsPage() {
                                             {/* Main Info */}
                                             <div className="flex-1 space-y-2">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${status.color}`}>
-                                                        <status.icon className="w-3 h-3" />
-                                                        {status.label}
+                                                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusInfo.color}`}>
+                                                        <statusInfo.icon className="w-3 h-3" />
+                                                        {statusInfo.label}
                                                     </div>
                                                     <span className="text-xs text-foreground/20 font-bold">•</span>
                                                     <div className="flex items-center gap-1.5 text-foreground/40 text-xs font-bold">
@@ -343,24 +345,32 @@ export default function AppointmentsPage() {
                                             <div className="flex items-center gap-3 justify-end pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-glass-border md:pl-8 min-w-[200px]">
                                                 {isUpcoming ? (
                                                     <>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                openActionModal(app);
-                                                            }}
-                                                            className="text-xs font-black text-rose-500/40 hover:text-rose-500 transition-colors uppercase tracking-widest px-4"
-                                                        >
-                                                            Cancelar / Reprogramar
-                                                        </button>
+                                                        {app.status !== 0 && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    openActionModal(app);
+                                                                }}
+                                                                className="text-xs font-black text-rose-500/40 hover:text-rose-500 transition-colors uppercase tracking-widest px-4"
+                                                            >
+                                                                Cancelar / Reprogramar
+                                                            </button>
+                                                        )}
                                                         <Button
                                                             onClick={canJoin ? () => handleJoinCall(app) : undefined}
-                                                            disabled={!canJoin}
+                                                            disabled={!canJoin || app.status === 0}
                                                             className="rounded-2xl px-6 h-12 shadow-lg shadow-primary/20 group/btn"
-                                                            variant="primary"
+                                                            variant={app.status === 0 ? "ghost" : "primary"}
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <Video className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
-                                                                <span>{app.videoLink ? (isExpired ? "Sesión expirada" : "Unirse ahora") : "Cita confirmada"}</span>
+                                                                <span>
+                                                                    {app.status === 0
+                                                                        ? "Pagar ahora"
+                                                                        : app.videoLink
+                                                                            ? (isExpired ? "Sesión expirada" : "Unirse ahora")
+                                                                            : "Cita confirmada"}
+                                                                </span>
                                                             </div>
                                                         </Button>
                                                     </>
