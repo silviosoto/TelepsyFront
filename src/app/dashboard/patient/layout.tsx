@@ -12,6 +12,7 @@ import { UserAvatar } from "@/components/dashboard/UserAvatar";
 const menuItems = [
     { label: "Inicio", href: "/dashboard/patient", icon: Home },
     { label: "Mis Citas", href: "/dashboard/patient/appointments", icon: Calendar },
+    { label: "Especialistas", href: "/dashboard/patient/psychologists", icon: User },
     { label: "Historial de Pagos", href: "/dashboard/patient/payments", icon: CreditCard },
     { label: "Mi Perfil", href: "/dashboard/patient/profile", icon: User },
 ];
@@ -97,7 +98,7 @@ export default function PatientDashboardLayout({
 
             {/* Main Content */}
             <main className="flex-1 md:ml-64 p-8 pt-24 md:pt-8 bg-secondary/5 min-h-screen">
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-7xl mx-auto">
                     {children}
                 </div>
             </main>

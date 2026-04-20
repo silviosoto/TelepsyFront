@@ -15,7 +15,7 @@ import { psychologistService, PsychologistUI } from "@/services/psychologist.ser
 
 const specialties = ["Todas", "Psicología Clínica", "Terapia de Pareja", "Psicología Infantil", "Neuropsicología"];
 
-export function ListingContent() {
+export function ListingContent({ isDashboard = false }: { isDashboard?: boolean }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSpecialty, setSelectedSpecialty] = useState("Todas");
     const [psychologists, setPsychologists] = useState<PsychologistUI[]>([]);
@@ -62,12 +62,12 @@ export function ListingContent() {
     }, [searchTerm, selectedSpecialty]);
 
     return (
-        <main className="min-h-screen bg-background">
-            <Navbar />
+        <main className={isDashboard ? "min-h-0" : "min-h-screen bg-background"}>
+            {!isDashboard && <Navbar />}
 
             {/* Header / Search Section */}
-            <section className="pt-32 pb-12 bg-secondary/5 border-b border-glass-border">
-                <div className="max-w-7xl mx-auto px-6">
+            <section className={isDashboard ? "pb-12 px-4 md:px-6" : "pt-32 pb-12 bg-secondary/5 border-b border-glass-border"}>
+                <div className={isDashboard ? "" : "max-w-7xl mx-auto px-6"}>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -112,7 +112,7 @@ export function ListingContent() {
 
             {/* Results Grid */}
             <section className="py-12 bg-background" aria-label="Resultados de búsqueda">
-                <div className="max-w-7xl mx-auto px-6">
+                <div className={isDashboard ? "px-4 md:px-6" : "max-w-7xl mx-auto px-6"}>
                     <div className="flex justify-between items-center mb-8">
                         <p className="text-foreground/60">
                             Mostrando <span className="font-bold text-foreground">{filteredPsychologists.length}</span> especialistas
@@ -229,7 +229,7 @@ export function ListingContent() {
                                                 </div>
 
                                                 <div className="p-4 bg-secondary/5 border-t border-glass-border">
-                                                    <Link href={`/psychologists/${psy.id}`} className="w-full">
+                                                    <Link href={isDashboard ? `/dashboard/patient/psychologists/${psy.id}` : `/psychologists/${psy.id}`} className="w-full">
                                                         <Button className="w-full rounded-xl group-hover:bg-primary group-hover:text-white transition-all">
                                                             Ver Perfil
                                                             <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -299,8 +299,7 @@ export function ListingContent() {
                 </div>
             </section>
 
-            <Footer />
+            {!isDashboard && <Footer />}
         </main>
     );
 }
-

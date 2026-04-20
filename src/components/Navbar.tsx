@@ -53,15 +53,21 @@ export const Navbar = () => {
                     {/* Desktop Menu */}
                     <div className="hidden md:flex items-center gap-8">
                         <div className="flex gap-6">
-                            {navLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
-                                >
-                                    {link.name}
-                                </Link>
-                            ))}
+                            {navLinks.map((link) => {
+                                let href = link.href;
+                                if (link.name === "Especialistas" && isAuthenticated && userRole === "Patient") {
+                                    href = "/dashboard/patient/psychologists";
+                                }
+                                return (
+                                    <Link
+                                        key={link.name}
+                                        href={href}
+                                        className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                                    >
+                                        {link.name}
+                                    </Link>
+                                );
+                            })}
                         </div>
                         <div className="flex items-center gap-4">
                             {isAuthenticated ? (
@@ -107,16 +113,22 @@ export const Navbar = () => {
                         className="fixed inset-x-0 top-[72px] z-[50] bg-white border-b border-glass-border md:hidden overflow-hidden shadow-xl"
                     >
                         <div className="flex flex-col p-6 gap-4 bg-white">
-                            {navLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    className="text-lg font-medium text-foreground/80 hover:text-primary py-2"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    {link.name}
-                                </Link>
-                            ))}
+                            {navLinks.map((link) => {
+                                let href = link.href;
+                                if (link.name === "Especialistas" && isAuthenticated && userRole === "Patient") {
+                                    href = "/dashboard/patient/psychologists";
+                                }
+                                return (
+                                    <Link
+                                        key={link.name}
+                                        href={href}
+                                        className="text-lg font-medium text-foreground/80 hover:text-primary py-2"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        {link.name}
+                                    </Link>
+                                );
+                            })}
                             <div className="h-px bg-glass-border my-2" />
                             {isAuthenticated ? (
                                 <Link href={`/dashboard/${userRole?.toLowerCase() || 'patient'}`} onClick={() => setIsMobileMenuOpen(false)}>

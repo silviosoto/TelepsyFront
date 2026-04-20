@@ -18,7 +18,7 @@ interface ScheduleItem {
     endTime: string;
 }
 
-export function ProfileContent() {
+export function ProfileContent({ isDashboard = false }: { isDashboard?: boolean }) {
     const params = useParams();
     const router = useRouter();
     const id = Number(params.id);
@@ -200,10 +200,10 @@ export function ProfileContent() {
     const activePackageForSelectedService = patientPackages.find(p => p.therapyId === selectedService?.therapyId && p.psychologistId === id);
 
     return (
-        <main className="min-h-screen bg-background">
-            <Navbar />
+        <main className={isDashboard ? "min-h-0" : "min-h-screen bg-background"}>
+            {!isDashboard && <Navbar />}
 
-            <div className="pt-28 pb-12 px-4 md:px-8 max-w-7xl mx-auto">
+            <div className={isDashboard ? "pb-12 px-4 md:px-6" : "pt-28 pb-12 px-4 md:px-8 max-w-7xl mx-auto"}>
                 <button
                     onClick={() => router.back()}
                     className="flex items-center text-sm text-foreground/60 hover:text-primary mb-6 transition-colors"
@@ -565,7 +565,7 @@ export function ProfileContent() {
                 </div>
             </div >
 
-            <Footer />
+            {!isDashboard && <Footer />}
         </main >
     );
 }

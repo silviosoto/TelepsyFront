@@ -42,7 +42,7 @@ export default function PatientDashboard() {
                         <h3 className="text-lg font-bold text-foreground mb-2">Próxima Sesión</h3>
                         <p className="text-sm text-foreground/60">Aún no tienes citas agendadas.</p>
                     </div>
-                    <Link href="/psychologists" className="mt-4 text-primary text-sm font-medium hover:underline">
+                    <Link href="/dashboard/patient/psychologists" className="mt-4 text-primary text-sm font-medium hover:underline">
                         Buscar especialista &rarr;
                     </Link>
                 </div>
@@ -75,7 +75,7 @@ export default function PatientDashboard() {
                 ) : packages.length === 0 ? (
                     <div className="bg-white border border-glass-border rounded-xl p-6 text-center">
                         <p className="text-foreground/60 text-sm mb-4">No tienes paquetes de sesiones activos.</p>
-                        <Link href="/psychologists">
+                        <Link href="/dashboard/patient/psychologists">
                             <Button size="sm">Explorar Especialistas</Button>
                         </Link>
                     </div>
@@ -112,7 +112,7 @@ export default function PatientDashboard() {
                                         </div>
                                     </div>
 
-                                    <Link href={`/psychologists/${pkg.psychologistId}`} className="mt-2 text-primary hover:underline text-sm font-bold flex items-center gap-1 group w-max">
+                                    <Link href={`/dashboard/patient/psychologists/${pkg.psychologistId}`} className="mt-2 text-primary hover:underline text-sm font-bold flex items-center gap-1 group w-max">
                                         <CalendarCheck2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                         Agendar Siguiente Sesión
                                     </Link>
