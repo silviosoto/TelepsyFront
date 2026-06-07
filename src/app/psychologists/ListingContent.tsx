@@ -15,6 +15,46 @@ import { psychologistService, PsychologistUI } from "@/services/psychologist.ser
 
 const specialties = ["Todas", "Psicología Clínica", "Terapia de Pareja", "Psicología Infantil", "Neuropsicología"];
 
+// Componente para manejar imágenes de perfil con error handling
+function PsychologistImage({ src, firstName, lastName }: { src?: string; firstName: string; lastName: string }) {
+    const [imageError, setImageError] = useState(false);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        if (src) {
+            console.log(`[PsychologistImage] Loading image for ${firstName} ${lastName}: ${src}`);
+        }
+    }, [src, firstName, lastName]);
+
+    const hasValidImage = src && !imageError;
+
+    return (
+        <div className="w-20 h-20 rounded-2xl bg-secondary/20 flex-shrink-0 relative overflow-hidden">
+            {hasValidImage ? (
+                <Image
+                    src={src}
+                    alt={`${firstName} ${lastName}`}
+                    fill
+                    className={`object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={() => {
+                        setLoaded(true);
+                        console.log(`[PsychologistImage] Image loaded successfully: ${src}`);
+                    }}
+                    onError={() => {
+                        setImageError(true);
+                        console.error(`[PsychologistImage] Failed to load image: ${src}`);
+                    }}
+                />
+            ) : null}
+            {!hasValidImage && (
+                <div className="absolute inset-0 flex items-center justify-center text-primary font-bold text-2xl bg-secondary/20">
+                    {firstName[0]}{lastName[0]}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function ListingContent({ isDashboard = false }: { isDashboard?: boolean }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSpecialty, setSelectedSpecialty] = useState("Todas");
@@ -158,20 +198,11 @@ export function ListingContent({ isDashboard = false }: { isDashboard?: boolean 
                                                 </div>
 
                                                 <div className="p-6 pb-0 flex gap-4">
-                                                    <div className="w-20 h-20 rounded-2xl bg-secondary/20 flex-shrink-0 relative overflow-hidden">
-                                                        {psy.profilePicture ? (
-                                                            <Image
-                                                                src={psy.profilePicture}
-                                                                alt={`${psy.firstName} ${psy.lastName}`}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="absolute inset-0 flex items-center justify-center text-primary font-bold text-2xl">
-                                                                {psy.firstName[0]}{psy.lastName[0]}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <PsychologistImage 
+                                                        src={psy.profilePicture}
+                                                        firstName={psy.firstName}
+                                                        lastName={psy.lastName}
+                                                    />
                                                     <div>
                                                         <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">{psy.firstName} {psy.lastName}</h3>
                                                         <p className="text-sm text-foreground/60 mb-2">{psy.specialization}</p>

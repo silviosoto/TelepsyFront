@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { appointmentService } from "@/services/appointment.service";
 import { psychologistService } from "@/services/psychologist.service";
 import { Input } from "@/components/Input";
@@ -163,7 +164,7 @@ export default function AppointmentsPage() {
         const expirationTime = new Date(scheduledDate.getTime() + 60 * 60 * 1000);
 
         if (new Date() > expirationTime) {
-            alert("La sesión ha expirado (más de 60 minutos desde la hora programada).");
+            toast.error("La sesión ha expirado. Solo puedes unirte hasta 60 minutos después de la hora programada.");
             return;
         }
 
@@ -316,6 +317,7 @@ export default function AppointmentsPage() {
                                             {parseApiDate(appointment.scheduledTime) < new Date() && (
                                                 <div className="flex gap-2">
                                                     <Button
+                                                        // disabled={true}
                                                         variant="outline"
                                                         onClick={() => handleMarkAsCompleted(appointment.id)}
                                                         className="text-xs h-8 px-2 border-green-500 text-green-600 hover:bg-green-50"
@@ -324,6 +326,7 @@ export default function AppointmentsPage() {
                                                         Completada
                                                     </Button>
                                                     <Button
+                                                        disabled={true} // Disable if already cancelled
                                                         variant="outline"
                                                         onClick={() => handleMarkAsNoShow(appointment.id)}
                                                         className="text-xs h-8 px-2 border-red-500 text-red-600 hover:bg-red-50"

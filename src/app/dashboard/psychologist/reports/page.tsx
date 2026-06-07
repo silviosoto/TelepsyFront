@@ -123,11 +123,6 @@ export default function ReportsPage() {
                     </h1>
                     <p className="text-gray-500 mt-1">Monitorea el desempeño de tus sesiones y tus ingresos netos.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" className="rounded-xl" onClick={() => window.print()}>
-                        <Download className="w-4 h-4 mr-2" /> Exportar PDF
-                    </Button>
-                </div>
             </header>
 
             {/* Filters */}
