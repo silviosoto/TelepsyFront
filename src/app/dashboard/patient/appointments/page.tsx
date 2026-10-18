@@ -34,6 +34,7 @@ interface Appointment {
     isPackage: boolean;
     sessionPackageId?: number;
     videoLink?: string;
+    reasonForConsultation?: string;
 }
 
 export default function AppointmentsPage() {
@@ -145,9 +146,19 @@ export default function AppointmentsPage() {
         setShowModal(true);
     };
 
-    const maxRescheduleDate = selectedAppointment
-        ? new Date(new Date(selectedAppointment.scheduledTime).setMonth(new Date(selectedAppointment.scheduledTime).getMonth() + 1))
-        : new Date();
+    const minDateStr = format(new Date(), "yyyy-MM-dd");
+
+    const maxRescheduleDate = (() => {
+        const now = new Date();
+        if (!selectedAppointment) {
+            return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        }
+        const appDate = parseApiDate(selectedAppointment.scheduledTime);
+        const baseDate = appDate > now ? appDate : now;
+        return new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    })();
+
+    const maxDateStr = format(maxRescheduleDate, "yyyy-MM-dd");
 
     const handleJoinCall = async (appointment: Appointment) => {
         const scheduledDate = parseApiDate(appointment.scheduledTime);
@@ -339,6 +350,13 @@ export default function AppointmentsPage() {
                                                         {app.therapyName}
                                                     </div>
                                                 </div>
+
+                                                {app.reasonForConsultation && (
+                                                    <div className="mt-2 text-xs bg-secondary/5 border border-glass-border rounded-xl px-3 py-2 text-foreground/70 max-w-lg">
+                                                        <span className="font-bold text-foreground block mb-0.5">Motivo de consulta:</span>
+                                                        <p className="italic text-foreground/60">{app.reasonForConsultation}</p>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Actions */}
@@ -549,8 +567,8 @@ export default function AppointmentsPage() {
                                                 <input
                                                     type="date"
                                                     value={rescheduleDate}
-                                                    min={new Date().toISOString().split('T')[0]}
-                                                    max={maxRescheduleDate.toISOString().split('T')[0]}
+                                                    min={minDateStr}
+                                                    max={maxDateStr}
                                                     onChange={(e) => setRescheduleDate(e.target.value)}
                                                     className="w-full p-4 rounded-2xl border border-glass-border bg-secondary/5 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                                                 />

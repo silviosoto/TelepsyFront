@@ -271,6 +271,11 @@ export default function CheckoutPage() {
                     <input name="buyerEmail" type="hidden" value={checkoutData.buyerEmail} />
                     <input name="responseUrl" type="hidden" value={checkoutData.responseUrl} />
                     <input name="confirmationUrl" type="hidden" value={checkoutData.confirmationUrl} />
+                    <input
+                        type="hidden"
+                        name="paymentMethods"
+                        value="VISA,VISA_DEBIT,MASTERCARD,AMEX,PSE,NEQUI,BANCOLOMBIA_BUTTON"
+                    />
                 </form>
             )}
 

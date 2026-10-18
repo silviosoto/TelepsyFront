@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { motion, AnimatePresence } from "framer-motion";
 import { appointmentService } from "@/services/appointment.service";
 import { psychologistService } from "@/services/psychologist.service";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
-import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Clock, User, FileText } from "lucide-react";
+import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Clock, User, FileText, CalendarClock, X, Loader2, AlertCircle, MessageSquare } from "lucide-react";
 import { parseApiDate } from "@/lib/utils";
 
 interface Appointment {
@@ -23,6 +26,7 @@ interface Appointment {
     status: number; // 0: Pending, 1: Confirmed, 2: Completed, 3: Cancelled
     durationMinutes: number;
     notes?: string;
+    reasonForConsultation?: string;
     sessionPackage?: {
         id: number;
         totalSessions: number;
@@ -43,6 +47,19 @@ export default function AppointmentsPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [statusFilter, setStatusFilter] = useState<number | undefined>(1); // Default to Confirmed
+
+    // Reschedule Modal States
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+    const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+    const [isRescheduling, setIsRescheduling] = useState(false);
+    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
+    // Reason for Consultation Modal
+    const [showReasonModal, setShowReasonModal] = useState(false);
+    const [reasonModalAppointment, setReasonModalAppointment] = useState<Appointment | null>(null);
 
     const fetchPsychologistId = async () => {
         try {
@@ -110,6 +127,65 @@ export default function AppointmentsPage() {
             fetchAppointments();
         } catch (error) {
             console.error("Error marking appointment as no show", error);
+        }
+    };
+
+    const minDateStr = format(new Date(), "yyyy-MM-dd");
+
+    const maxRescheduleDate = (() => {
+        const now = new Date();
+        if (!selectedAppointment) {
+            return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        }
+        const appDate = parseApiDate(selectedAppointment.scheduledTime);
+        const baseDate = appDate > now ? appDate : now;
+        return new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    })();
+
+    const maxDateStr = format(maxRescheduleDate, "yyyy-MM-dd");
+
+    const openRescheduleModal = (app: Appointment) => {
+        setSelectedAppointment(app);
+        setRescheduleDate("");
+        setAvailableSlots([]);
+        setSelectedSlot(null);
+        setShowRescheduleModal(true);
+    };
+
+    const fetchSlots = async (date: string) => {
+        if (!selectedAppointment || !psychologistId) return;
+        try {
+            setIsLoadingSlots(true);
+            const duration = selectedAppointment.durationMinutes || 60;
+            const slots: any = await appointmentService.getAvailableSlots(psychologistId, date, duration);
+            setAvailableSlots(slots || []);
+        } catch (error) {
+            console.error("Error fetching slots:", error);
+            toast.error("Error al cargar horarios disponibles");
+        } finally {
+            setIsLoadingSlots(false);
+        }
+    };
+
+    useEffect(() => {
+        if (rescheduleDate && showRescheduleModal) {
+            fetchSlots(rescheduleDate);
+        }
+    }, [rescheduleDate, showRescheduleModal]);
+
+    const handleReschedule = async () => {
+        if (!selectedAppointment || !selectedSlot) return;
+
+        try {
+            setIsRescheduling(true);
+            await appointmentService.rescheduleAppointment(selectedAppointment.id, selectedSlot);
+            toast.success("Cita reagendada correctamente");
+            setShowRescheduleModal(false);
+            fetchAppointments();
+        } catch (error: any) {
+            toast.error(error.message || "Error al reagendar la cita");
+        } finally {
+            setIsRescheduling(false);
         }
     };
 
@@ -291,6 +367,19 @@ export default function AppointmentsPage() {
                                                 <span>{parseApiDate(appointment.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
                                         </div>
+                                        {appointment.reasonForConsultation && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setReasonModalAppointment(appointment);
+                                                    setShowReasonModal(true);
+                                                }}
+                                                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200/60 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 hover:border-indigo-300 transition-all group/reason"
+                                            >
+                                                <MessageSquare className="h-3.5 w-3.5 group-hover/reason:scale-110 transition-transform" />
+                                                Ver motivo de consulta
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -305,13 +394,23 @@ export default function AppointmentsPage() {
                                     </div>
 
                                     {appointment.status === 1 && (
-                                        <div className="flex gap-3">
+                                        <div className="flex flex-wrap gap-2 items-center">
                                             <Button
                                                 variant="primary"
                                                 onClick={() => handleJoinCall(appointment.id, appointment.scheduledTime)}
                                                 className="text-xs h-8 px-4"
                                             >
                                                 Unirse a Llamada
+                                            </Button>
+
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => openRescheduleModal(appointment)}
+                                                className="text-xs h-8 px-3 border-amber-500/40 text-amber-700 hover:bg-amber-50 font-bold flex items-center gap-1.5 shadow-sm"
+                                                title="Reagendar Cita"
+                                            >
+                                                <CalendarClock className="h-3.5 w-3.5 text-amber-600" />
+                                                Reagendar
                                             </Button>
 
                                             {parseApiDate(appointment.scheduledTime) < new Date() && (
@@ -337,6 +436,18 @@ export default function AppointmentsPage() {
                                                 </div>
                                             )}
                                         </div>
+                                    )}
+
+                                    {appointment.status === 0 && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => openRescheduleModal(appointment)}
+                                            className="text-xs h-8 px-3 border-amber-500/40 text-amber-700 hover:bg-amber-50 font-bold flex items-center gap-1.5 shadow-sm"
+                                            title="Reagendar Cita"
+                                        >
+                                            <CalendarClock className="h-3.5 w-3.5 text-amber-600" />
+                                            Reagendar
+                                        </Button>
                                     )}
                                     <Button
                                         variant="outline"
@@ -379,6 +490,239 @@ export default function AppointmentsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Modal Motivo de Consulta */}
+            <AnimatePresence>
+                {showReasonModal && reasonModalAppointment && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowReasonModal(false)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl relative z-10 border border-gray-100"
+                        >
+                            {/* Gradient header */}
+                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 relative">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                            <MessageSquare className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-black text-white">Motivo de Consulta</h2>
+                                            <p className="text-xs text-white/70 mt-0.5">
+                                                {reasonModalAppointment.patient?.person?.firstName} {reasonModalAppointment.patient?.person?.lastName}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowReasonModal(false)}
+                                        className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                    >
+                                        <X className="w-4 h-4 text-white" />
+                                    </button>
+                                </div>
+                                {/* Decorative circles */}
+                                <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-white/5" />
+                                <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-white/5" />
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 space-y-4">
+                                {/* Date chip */}
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    <span className="font-medium">
+                                        {parseApiDate(reasonModalAppointment.scheduledTime).toLocaleDateString('es-ES', {
+                                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                                        })}
+                                    </span>
+                                    <span className="mx-1">·</span>
+                                    <Clock className="h-3.5 w-3.5" />
+                                    <span className="font-medium">
+                                        {parseApiDate(reasonModalAppointment.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+
+                                {/* Reason text */}
+                                <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-5">
+                                    <p className="text-sm text-gray-700 leading-relaxed italic whitespace-pre-wrap">
+                                        &ldquo;{reasonModalAppointment.reasonForConsultation}&rdquo;
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => setShowReasonModal(false)}
+                                    className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-700 transition-colors"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Modal Reagendar Cita */}
+            <AnimatePresence>
+                {showRescheduleModal && selectedAppointment && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !isRescheduling && setShowRescheduleModal(false)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl relative z-10 border border-gray-100"
+                        >
+                            <div className="p-6 md:p-8 space-y-6">
+                                {/* Header */}
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                                            <CalendarClock className="w-6 h-6 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-black text-gray-900">Reagendar Cita</h2>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Paciente: <span className="font-bold text-gray-800">{selectedAppointment.patient?.person?.firstName} {selectedAppointment.patient?.person?.lastName}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => !isRescheduling && setShowRescheduleModal(false)}
+                                        className="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                {/* Current appointment details */}
+                                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Horario actual</span>
+                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                                        <Calendar className="w-4 h-4 text-primary" />
+                                        <span>{formatDate(selectedAppointment.scheduledTime)}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Máximo permitido para reagendar:{" "}
+                                        <span className="font-bold text-primary">
+                                            {format(maxRescheduleDate, "dd 'de' MMMM, yyyy", { locale: es })}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                {/* Form */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
+                                            Seleccionar nueva fecha
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={rescheduleDate}
+                                            min={minDateStr}
+                                            max={maxDateStr}
+                                            onChange={(e) => {
+                                                setRescheduleDate(e.target.value);
+                                                setSelectedSlot(null);
+                                            }}
+                                            className="w-full p-3.5 rounded-xl border border-gray-200 bg-gray-50 font-bold text-gray-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm"
+                                        />
+                                    </div>
+
+                                    {rescheduleDate && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 block">
+                                                    Horarios disponibles en tu agenda
+                                                </label>
+                                                {selectedSlot && (
+                                                    <span className="text-xs font-bold text-primary">
+                                                        Seleccionado: {format(parseApiDate(selectedSlot), "HH:mm")}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {isLoadingSlots ? (
+                                                <div className="flex flex-col items-center justify-center p-8 space-y-2 bg-gray-50/50 rounded-2xl border border-gray-100">
+                                                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                                                    <p className="text-xs text-gray-400 font-medium">Buscando horarios disponibles...</p>
+                                                </div>
+                                            ) : availableSlots.length > 0 ? (
+                                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1 scrollbar-thin">
+                                                    {availableSlots.map((slot: any) => {
+                                                        const isSelected = selectedSlot === slot.startTime;
+                                                        return (
+                                                            <button
+                                                                key={slot.startTime}
+                                                                type="button"
+                                                                onClick={() => setSelectedSlot(slot.startTime)}
+                                                                className={`p-2.5 rounded-xl text-xs font-bold transition-all text-center border ${
+                                                                    isSelected
+                                                                        ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105"
+                                                                        : "bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200/60"
+                                                                }`}
+                                                            >
+                                                                {format(parseApiDate(slot.startTime), "HH:mm")}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 bg-amber-50/80 rounded-2xl border border-amber-200/60 text-center space-y-1">
+                                                    <div className="inline-flex p-1.5 bg-amber-100 rounded-full mb-1">
+                                                        <AlertCircle className="w-4 h-4 text-amber-700" />
+                                                    </div>
+                                                    <p className="text-xs font-bold text-amber-800">
+                                                        No hay horarios disponibles configurados para este día
+                                                    </p>
+                                                    <p className="text-[11px] text-amber-600">
+                                                        Verifica tu horario de atención configurado en tu pestaña de Agenda.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Modal Actions */}
+                                <div className="flex gap-3 pt-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowRescheduleModal(false)}
+                                        disabled={isRescheduling}
+                                        className="flex-1 rounded-xl h-12 text-sm"
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleReschedule}
+                                        disabled={!selectedSlot || isRescheduling}
+                                        isLoading={isRescheduling}
+                                        className="flex-1 rounded-xl h-12 text-sm font-bold shadow-lg shadow-primary/20"
+                                    >
+                                        Confirmar Reagendado
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, MapPin, Calendar, Clock, Award, BookOpen, MessageCircle, CheckCircle, Shield, ArrowLeft, ChevronDown, Check, Package } from "lucide-react";
+import { Star, MapPin, Calendar, Clock, Award, BookOpen, MessageCircle, MessageSquare, CheckCircle, Shield, ArrowLeft, ChevronDown, Check, Package } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/sections/Footer";
 import { Button } from "@/components/Button";
@@ -37,6 +37,7 @@ export function ProfileContent({ isDashboard = false }: { isDashboard?: boolean 
     const [packageSessions, setPackageSessions] = useState<number | null>(null);
     const [patientPackages, setPatientPackages] = useState<any[]>([]);
     const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+    const [reasonForConsultation, setReasonForConsultation] = useState("");
 
     useEffect(() => {
         const fetchPatientPackages = async () => {
@@ -134,6 +135,11 @@ export function ProfileContent({ isDashboard = false }: { isDashboard?: boolean 
     const handleBooking = async () => {
         if (!selectedService || !selectedTime) return;
 
+        if (!reasonForConsultation.trim()) {
+            toast.error("Por favor ingresa el motivo de tu consulta");
+            return;
+        }
+
         const token = localStorage.getItem("token");
         if (!token) {
             toast.error("Debes iniciar sesión para reservar una cita");
@@ -151,7 +157,8 @@ export function ProfileContent({ isDashboard = false }: { isDashboard?: boolean 
                 psychologistId: id,
                 therapyId: selectedService.therapyId,
                 scheduledTime: scheduledTime.toISOString(),
-                packageSessions: packageSessions
+                packageSessions: packageSessions,
+                reasonForConsultation: reasonForConsultation.trim()
             });
 
             if (result && result.appointmentId) {
@@ -544,9 +551,32 @@ export function ProfileContent({ isDashboard = false }: { isDashboard?: boolean 
                                         </div>
                                     </div>
 
+                                    <div>
+                                        <label className="block text-sm font-bold text-foreground mb-2 flex items-center justify-between">
+                                            <span className="flex items-center gap-2">
+                                                <MessageSquare className="w-4 h-4 text-primary" /> Motivo de consulta
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                                                Requerido
+                                            </span>
+                                        </label>
+                                        <textarea
+                                            rows={3}
+                                            value={reasonForConsultation}
+                                            onChange={(e) => setReasonForConsultation(e.target.value)}
+                                            placeholder="Describe brevemente el motivo de tu consulta (ej. ansiedad, estrés, dificultades emocionales o de pareja...)"
+                                            maxLength={500}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-glass-border bg-white text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none shadow-sm"
+                                        />
+                                        <div className="flex justify-between items-center mt-1 text-[11px] text-foreground/40 font-medium">
+                                            <span>Ayuda a tu especialista a preparar la sesión</span>
+                                            <span>{reasonForConsultation.length}/500</span>
+                                        </div>
+                                    </div>
+
                                     <Button
-                                        className="w-full h-12 text-lg font-bold rounded-xl mt-4"
-                                        disabled={!selectedTime || !selectedService || isBooking || !psychologist?.isVerified}
+                                        className="w-full h-12 text-lg font-bold rounded-xl mt-2"
+                                        disabled={!selectedTime || !selectedService || !reasonForConsultation.trim() || isBooking || !psychologist?.isVerified}
                                         onClick={handleBooking}
                                         isLoading={isBooking}
                                     >

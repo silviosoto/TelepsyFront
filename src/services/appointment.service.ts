@@ -40,7 +40,7 @@ export const appointmentService = {
         });
     },
 
-    async initiateBooking(bookingData: { psychologistId: number; therapyId: number; scheduledTime: string; packageSessions?: number | null }) {
+    async initiateBooking(bookingData: { psychologistId: number; therapyId: number; scheduledTime: string; packageSessions?: number | null; reasonForConsultation?: string }) {
         return fetchClient('/appointments/initiate', {
             method: 'POST',
             body: JSON.stringify(bookingData)

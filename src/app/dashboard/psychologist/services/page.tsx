@@ -31,6 +31,8 @@ interface Therapy {
     description: string;
 }
 
+const MIN_SERVICE_RATE = 60000;
+
 export default function ServicesPage() {
     const [myServices, setMyServices] = useState<ServiceState[]>([]);
     const [allTherapies, setAllTherapies] = useState<Therapy[]>([]);
@@ -119,6 +121,15 @@ export default function ServicesPage() {
 
     const handleSave = async (service: ServiceState) => {
         if (!psychologistId) return;
+
+        if (service.isActive && service.rate < MIN_SERVICE_RATE) {
+            setMessage({
+                type: 'error',
+                text: `La tarifa para "${service.therapyName}" debe ser de al menos $${MIN_SERVICE_RATE.toLocaleString('es-CO')} COP.`
+            });
+            return;
+        }
+
         setMyServices(prev => prev.map(s => s.therapyId === service.therapyId ? { ...s, isSaving: true } : s));
         setMessage(null);
 
@@ -132,9 +143,9 @@ export default function ServicesPage() {
             setMyServices(prev => prev.map(s => s.therapyId === service.therapyId ? { ...s, isSaving: false, isModified: false } : s));
             setMessage({ type: 'success', text: `Servicio "${service.therapyName}" actualizado.` });
             setTimeout(() => setMessage(null), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving service:", error);
-            setMessage({ type: 'error', text: "Error al guardar el servicio." });
+            setMessage({ type: 'error', text: error.message || "Error al guardar el servicio." });
             setMyServices(prev => prev.map(s => s.therapyId === service.therapyId ? { ...s, isSaving: false } : s));
         }
     };
@@ -145,6 +156,14 @@ export default function ServicesPage() {
         const rate = parseFloat(newServiceRate);
         if (isNaN(rate) || rate <= 0) {
             setMessage({ type: 'error', text: "Por favor ingresa un monto válido." });
+            return;
+        }
+
+        if (rate < MIN_SERVICE_RATE) {
+            setMessage({
+                type: 'error',
+                text: `La tarifa mínima por servicio es de $${MIN_SERVICE_RATE.toLocaleString('es-CO')} COP.`
+            });
             return;
         }
 
@@ -175,9 +194,9 @@ export default function ServicesPage() {
             setSearchQuery("");
             setMessage({ type: 'success', text: "Servicio agregado correctamente." });
             setTimeout(() => setMessage(null), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error adding service:", error);
-            setMessage({ type: 'error', text: "Error al agregar el servicio." });
+            setMessage({ type: 'error', text: error.message || "Error al agregar el servicio." });
         } finally {
             setIsAdding(false);
         }
@@ -219,7 +238,9 @@ export default function ServicesPage() {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Mis Servicios</h1>
-                <p className="text-lg text-gray-500 mt-2">Gestiona las terapias que ofreces y configura tus tarifas.</p>
+                <p className="text-lg text-gray-500 mt-2">
+                    Gestiona las terapias que ofreces y configura tus tarifas (tarifa mínima por servicio: <span className="font-semibold text-gray-700">$60.000 COP</span>).
+                </p>
             </div>
 
             {/* Alert Message */}
@@ -316,23 +337,35 @@ export default function ServicesPage() {
                             </div>
 
                             <div className="w-full md:w-64 space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tarifa por Sesión</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tarifa por Sesión</label>
+                                    <span className="text-[11px] font-semibold text-primary">Mín. $60.000</span>
+                                </div>
                                 <div className="relative">
                                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                     <input
                                         type="number"
-                                        placeholder="0.00"
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all font-semibold"
+                                        min={MIN_SERVICE_RATE}
+                                        step="1000"
+                                        placeholder="60000"
+                                        className={`w-full pl-10 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all font-semibold ${
+                                            newServiceRate && parseFloat(newServiceRate) < MIN_SERVICE_RATE
+                                                ? 'border-red-300 bg-red-50/30'
+                                                : 'border-gray-200'
+                                        }`}
                                         value={newServiceRate}
                                         onChange={(e) => setNewServiceRate(e.target.value)}
                                         autoFocus
                                     />
                                 </div>
+                                {newServiceRate && parseFloat(newServiceRate) < MIN_SERVICE_RATE && (
+                                    <p className="text-[11px] text-red-500 font-semibold">El monto mínimo es de $60.000 COP</p>
+                                )}
                             </div>
 
                             <Button
                                 onClick={handleAddService}
-                                disabled={isAdding || !newServiceRate}
+                                disabled={isAdding || !newServiceRate || parseFloat(newServiceRate) < MIN_SERVICE_RATE}
                                 className="w-full md:w-auto px-8 py-3 h-[52px] shadow-lg shadow-primary/20"
                             >
                                 {isAdding ? <Loader2 className="h-5 w-5 animate-spin" /> : "Agregar Servicio"}
@@ -379,20 +412,36 @@ export default function ServicesPage() {
 
                                 <div className="space-y-4 mb-8">
                                     <div className="relative">
-                                        <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1.5 block">
-                                            Tu Tarifa Actual
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest block">
+                                                Tu Tarifa Actual
+                                            </label>
+                                            <span className="text-[10px] font-bold text-gray-400">
+                                                Mín. $60.000
+                                            </span>
+                                        </div>
                                         <div className="relative">
                                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                             <input
                                                 type="number"
+                                                min={MIN_SERVICE_RATE}
+                                                step="1000"
                                                 value={service.rate}
                                                 onChange={(e) => handleRateChange(service.therapyId, e.target.value)}
                                                 disabled={!service.isActive}
-                                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50/50 text-sm font-bold focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary disabled:opacity-50 transition-all"
-                                                placeholder="0.00"
+                                                className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm font-bold focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary disabled:opacity-50 transition-all ${
+                                                    service.isActive && service.rate < MIN_SERVICE_RATE
+                                                        ? 'border-red-300 bg-red-50/30 text-red-700'
+                                                        : 'border-gray-100 bg-gray-50/50'
+                                                }`}
+                                                placeholder="60000"
                                             />
                                         </div>
+                                        {service.isActive && service.rate < MIN_SERVICE_RATE && (
+                                            <p className="text-[11px] text-red-500 font-semibold mt-1">
+                                                Monto mínimo: $60.000 COP
+                                            </p>
+                                        )}
                                     </div>
                                     <p className="text-xs text-gray-400 line-clamp-2 italic">
                                         {service.description}
@@ -401,9 +450,9 @@ export default function ServicesPage() {
 
                                 <Button
                                     onClick={() => handleSave(service)}
-                                    disabled={!service.isModified || service.isSaving}
+                                    disabled={!service.isModified || service.isSaving || (service.isActive && service.rate < MIN_SERVICE_RATE)}
                                     variant={service.isActive ? "primary" : "outline"}
-                                    className={`w-full rounded-2xl h-11 transition-all ${service.isModified
+                                    className={`w-full rounded-2xl h-11 transition-all ${service.isModified && (!service.isActive || service.rate >= MIN_SERVICE_RATE)
                                         ? 'shadow-lg shadow-primary/20'
                                         : 'opacity-50'
                                         }`}

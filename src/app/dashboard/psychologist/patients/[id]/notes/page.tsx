@@ -263,7 +263,7 @@ export default function PsychologyNotesPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-foreground/70 uppercase tracking-wider">Intervenciones Realizadas</label>
+                                <label className="text-sm font-bold text-foreground/70 uppercase tracking-wider">Técnicas Realizadas</label>
                                 <textarea
                                     name="interventions"
                                     value={currentNote.interventions || ""}
